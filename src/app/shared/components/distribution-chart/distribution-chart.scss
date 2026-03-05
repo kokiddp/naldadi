@@ -1,0 +1,72 @@
+.chart-wrap {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 39, 56, 0.16);
+  border-radius: 12px;
+  padding: 0.8rem;
+}
+
+h3 {
+  margin: 0 0 0.7rem;
+}
+
+.empty {
+  color: #294357;
+  margin: 0;
+}
+
+.bars {
+  align-items: end;
+  display: grid;
+  gap: 0.3rem;
+  grid-auto-columns: minmax(16px, 1fr);
+  grid-auto-flow: column;
+  min-height: 190px;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+}
+
+.bar-item {
+  align-items: center;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-rows: 1fr auto;
+}
+
+.bar-track {
+  background: rgba(15, 39, 56, 0.1);
+  border-radius: 6px;
+  display: flex;
+  height: 160px;
+  justify-content: center;
+  min-width: 16px;
+}
+
+.bar-fill {
+  align-self: end;
+  background: linear-gradient(180deg, #1f648e 0%, #163b55 100%);
+  border-radius: 6px;
+  width: 100%;
+}
+
+.bar-label {
+  color: #294357;
+  display: block;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.line-chart {
+  height: 210px;
+}
+
+svg {
+  border-radius: 8px;
+  height: 100%;
+  width: 100%;
+}
+
+.cdf-line {
+  fill: none;
+  stroke: #1c5b82;
+  stroke-width: 3;
+}

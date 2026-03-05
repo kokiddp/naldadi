@@ -1,24 +1,59 @@
 <section class="panel">
 	<h2>Dice Analysis</h2>
-	<p>
-		Compose throws exactly like in Dice Throw mode, then run large Monte Carlo
-		simulations with configurable iteration counts.
-	</p>
+	<p>Compose the same throw as Dice Throw mode and simulate at scale.</p>
 
-	<ul>
-		<li>Set simulation count (for example 10,000 to 1,000,000 runs).</li>
-		<li>Track min, max, mean, median, and result distribution.</li>
-		<li>Render chart views for frequency and cumulative probability.</li>
-	</ul>
+	<div class="layout">
+		<app-throw-composer [config]="config()" (configChange)="onConfigChange($event)" />
 
-	<div class="stats-grid">
-		<article>
-			<h3>Stats</h3>
-			<p>Summary cards for min, max, average, median, and standard deviation.</p>
-		</article>
-		<article>
-			<h3>Graphs</h3>
-			<p>Histogram and CDF charts for understanding spread and odds.</p>
-		</article>
+		<div class="controls">
+			<label for="iterations">Simulation Count</label>
+			<input
+				id="iterations"
+				type="number"
+				min="1"
+				step="1"
+				[value]="iterations()"
+				(input)="onIterationsChange($any($event.target).value)"
+			/>
+
+			<button type="button" (click)="run()" [disabled]="!canRun()">
+				{{ isRunning() ? 'Running...' : 'Run Simulation' }}
+			</button>
+
+			<p class="error" *ngIf="validationError() as error">{{ error }}</p>
+			<p class="status" *ngIf="statusMessage() as message">{{ message }}</p>
+		</div>
 	</div>
+
+	<section class="stats-grid" *ngIf="simulation() as result">
+		<article>
+			<h3>Iterations</h3>
+			<p>{{ result.stats.iterations.toLocaleString() }}</p>
+		</article>
+		<article>
+			<h3>Min / Max</h3>
+			<p>{{ result.stats.min }} / {{ result.stats.max }}</p>
+		</article>
+		<article>
+			<h3>Mean</h3>
+			<p>{{ result.stats.mean.toFixed(2) }}</p>
+		</article>
+		<article>
+			<h3>Median</h3>
+			<p>{{ result.stats.median.toFixed(2) }}</p>
+		</article>
+		<article>
+			<h3>Std Dev</h3>
+			<p>{{ result.stats.stdDev.toFixed(2) }}</p>
+		</article>
+	</section>
+
+	<section class="charts" *ngIf="simulation() as result">
+		<app-distribution-chart
+			[points]="result.distribution"
+			title="Histogram (Frequencies)"
+			mode="histogram"
+		/>
+		<app-distribution-chart [points]="result.distribution" title="CDF (Cumulative Probability)" mode="cdf" />
+	</section>
 </section>

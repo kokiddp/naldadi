@@ -1,0 +1,29 @@
+<section class="chart-wrap" *ngIf="points.length > 0; else noData">
+  <h3>{{ title }}</h3>
+
+  <div class="bars" *ngIf="mode === 'histogram'">
+    <div class="bar-item" *ngFor="let point of points; trackBy: trackByTotal">
+      <span class="bar-label">{{ point.total }}</span>
+      <div class="bar-track">
+        <div
+          class="bar-fill"
+          [style.height.%]="(point.frequency / maxFrequency) * 100"
+          [attr.title]="'Total ' + point.total + ': ' + point.frequency + ' results'"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="line-chart" *ngIf="mode === 'cdf'">
+    <svg [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight" preserveAspectRatio="none">
+      <path class="cdf-line" [attr.d]="linePath"></path>
+    </svg>
+  </div>
+</section>
+
+<ng-template #noData>
+  <section class="chart-wrap">
+    <h3>{{ title }}</h3>
+    <p class="empty">No data yet.</p>
+  </section>
+</ng-template>

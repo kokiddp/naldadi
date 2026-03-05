@@ -14,13 +14,20 @@ p {
 	color: #294357;
 }
 
-ul {
-	margin: 0.8rem 0 0;
-	padding-left: 1.2rem;
+.layout {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: minmax(240px, 320px) 1fr;
+	margin-top: 1rem;
 }
 
-li + li {
-	margin-top: 0.4rem;
+.controls {
+	align-content: start;
+	background: rgba(20, 48, 70, 0.08);
+	border-radius: 12px;
+	display: grid;
+	gap: 0.5rem;
+	padding: 0.8rem;
 }
 
 .stats-grid {
@@ -44,4 +51,54 @@ article h3 {
 article p {
 	color: #d8e7f3;
 	margin: 0.45rem 0 0;
+}
+
+label {
+	font-weight: 700;
+}
+
+input {
+	border: 1px solid rgba(15, 39, 56, 0.2);
+	border-radius: 8px;
+	font-size: 1rem;
+	padding: 0.45rem;
+}
+
+button {
+	background: #17374f;
+	border: none;
+	border-radius: 10px;
+	color: #f8fcff;
+	cursor: pointer;
+	font-weight: 700;
+	margin-top: 0.3rem;
+	padding: 0.6rem 1rem;
+}
+
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.error {
+	color: #8f3d20;
+	margin: 0;
+}
+
+.status {
+	color: #1c4f6f;
+	margin: 0;
+}
+
+.charts {
+	display: grid;
+	gap: 0.8rem;
+	grid-template-columns: 1fr;
+	margin-top: 1rem;
+}
+
+@media (max-width: 800px) {
+	.layout {
+		grid-template-columns: 1fr;
+	}
 }

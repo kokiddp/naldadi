@@ -8,24 +8,24 @@
 
 ## Core Domain
 
-- [ ] Define `DieType` model (`d4|d6|d8|d10|d12|d20`)
-- [ ] Define throw request model (list of dice entries with counts)
-- [ ] Create shared validation helpers for throw configuration
+- [x] Define `DieType` model (`d4|d6|d8|d10|d12|d20`)
+- [x] Define throw request model (list of dice entries with counts)
+- [x] Create shared validation helpers for throw configuration
 
 ## Dice Throw Feature
 
-- [ ] Build throw composer component (add/remove die types and counts)
-- [ ] Implement one-off roll engine
+- [x] Build throw composer component (add/remove die types and counts)
+- [x] Implement one-off roll engine
 - [ ] Display per-die results and total sum
 - [ ] Add throw history list (latest N throws)
 
 ## Dice Analysis Feature
 
-- [ ] Reuse throw composer from throw mode
-- [ ] Add simulation control for large iteration counts
+- [x] Reuse throw composer from throw mode
+- [x] Add simulation control for large iteration counts
 - [ ] Implement simulation worker/service for high-volume runs
-- [ ] Compute summary statistics (min, max, mean, median, std dev)
-- [ ] Display distributions and cumulative probability graphs
+- [x] Compute summary statistics (min, max, mean, median, std dev)
+- [x] Display distributions and cumulative probability graphs
 
 ## Quality
 

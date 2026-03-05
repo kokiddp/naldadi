@@ -22,6 +22,120 @@ export interface SimulationResult {
   readonly distribution: DistributionPoint[];
 }
 
+export interface SimulationProgress {
+  readonly completedIterations: number;
+  readonly totalIterations: number;
+  readonly progressPercent: number;
+}
+
+export interface ProgressiveSimulationOptions {
+  readonly rng?: () => number;
+  readonly chunkSize?: number;
+  readonly onProgress?: (progress: SimulationProgress) => void;
+  readonly yieldToMainThread?: () => Promise<void>;
+  readonly shouldCancel?: () => boolean;
+}
+
+export class SimulationCancelledError extends Error {
+  constructor() {
+    super('Simulation cancelled by user.');
+    this.name = 'SimulationCancelledError';
+  }
+}
+
+interface SimulationAccumulator {
+  readonly histogram: Map<number, number>;
+  min: number;
+  max: number;
+  sum: number;
+  sumSquares: number;
+}
+
+interface DiceGroup {
+  readonly sides: number;
+  readonly count: number;
+}
+
+function createDiceGroups(config: ThrowConfig): DiceGroup[] {
+  const normalizedConfig = normalizeThrowConfig(config);
+  const groups: DiceGroup[] = [];
+
+  for (const dieType of DIE_TYPES) {
+    const sides = getDieSides(dieType);
+    const count = normalizedConfig[dieType];
+
+    if (count > 0) {
+      groups.push({ sides, count });
+    }
+  }
+
+  return groups;
+}
+
+function createAccumulator(): SimulationAccumulator {
+  return {
+    histogram: new Map<number, number>(),
+    min: Number.POSITIVE_INFINITY,
+    max: Number.NEGATIVE_INFINITY,
+    sum: 0,
+    sumSquares: 0,
+  };
+}
+
+function runIterationBatch(
+  accumulator: SimulationAccumulator,
+  diceGroups: DiceGroup[],
+  batchIterations: number,
+  rng: () => number,
+): void {
+  for (let simulationIndex = 0; simulationIndex < batchIterations; simulationIndex += 1) {
+    let total = 0;
+
+    for (const group of diceGroups) {
+      for (let dieIndex = 0; dieIndex < group.count; dieIndex += 1) {
+        total += Math.floor(rng() * group.sides) + 1;
+      }
+    }
+
+    accumulator.histogram.set(total, (accumulator.histogram.get(total) ?? 0) + 1);
+    accumulator.min = Math.min(accumulator.min, total);
+    accumulator.max = Math.max(accumulator.max, total);
+    accumulator.sum += total;
+    accumulator.sumSquares += total * total;
+  }
+}
+
+function buildSimulationResult(accumulator: SimulationAccumulator, iterations: number): SimulationResult {
+  const mean = accumulator.sum / iterations;
+  const variance = Math.max(0, accumulator.sumSquares / iterations - mean * mean);
+  const stdDev = Math.sqrt(variance);
+
+  const distributionEntries = [...accumulator.histogram.entries()].sort((a, b) => a[0] - b[0]);
+  let runningFrequency = 0;
+
+  const distribution: DistributionPoint[] = distributionEntries.map(([total, frequency]) => {
+    runningFrequency += frequency;
+    return {
+      total,
+      frequency,
+      probability: frequency / iterations,
+      cumulativeProbability: runningFrequency / iterations,
+    };
+  });
+
+  return {
+    stats: {
+      iterations,
+      min: Number.isFinite(accumulator.min) ? accumulator.min : 0,
+      max: Number.isFinite(accumulator.max) ? accumulator.max : 0,
+      mean,
+      median: getMedianFromDistribution(accumulator.histogram, iterations),
+      stdDev,
+    },
+    distribution,
+  };
+}
+
 function getMedianFromDistribution(histogram: Map<number, number>, iterations: number): number {
   const sortedTotals = [...histogram.entries()].sort((a, b) => a[0] - b[0]);
   const lowerTarget = Math.floor((iterations + 1) / 2);
@@ -55,64 +169,54 @@ export function runSimulation(
   iterations: number,
   rng: () => number = Math.random,
 ): SimulationResult {
-  const normalizedConfig = normalizeThrowConfig(config);
-  const diceSidesPool: number[] = [];
+  const diceGroups = createDiceGroups(config);
+  const accumulator = createAccumulator();
 
-  for (const dieType of DIE_TYPES) {
-    const sides = getDieSides(dieType);
-    const count = normalizedConfig[dieType];
+  runIterationBatch(accumulator, diceGroups, iterations, rng);
 
-    for (let index = 0; index < count; index += 1) {
-      diceSidesPool.push(sides);
+  return buildSimulationResult(accumulator, iterations);
+}
+
+export async function runSimulationProgressive(
+  config: ThrowConfig,
+  iterations: number,
+  options: ProgressiveSimulationOptions = {},
+): Promise<SimulationResult> {
+  const rng = options.rng ?? Math.random;
+  const chunkSize = Math.max(1, Math.trunc(options.chunkSize ?? 25000));
+  const onProgress = options.onProgress;
+  const shouldCancel = options.shouldCancel;
+  const yieldToMainThread = options.yieldToMainThread ?? (() => new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  }));
+
+  const diceGroups = createDiceGroups(config);
+  const accumulator = createAccumulator();
+
+  let completedIterations = 0;
+  onProgress?.({ completedIterations: 0, totalIterations: iterations, progressPercent: 0 });
+
+  while (completedIterations < iterations) {
+    if (shouldCancel?.()) {
+      throw new SimulationCancelledError();
+    }
+
+    const remaining = iterations - completedIterations;
+    const currentBatchSize = Math.min(chunkSize, remaining);
+
+    runIterationBatch(accumulator, diceGroups, currentBatchSize, rng);
+    completedIterations += currentBatchSize;
+
+    onProgress?.({
+      completedIterations,
+      totalIterations: iterations,
+      progressPercent: (completedIterations / iterations) * 100,
+    });
+
+    if (completedIterations < iterations) {
+      await yieldToMainThread();
     }
   }
 
-  const histogram = new Map<number, number>();
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-  let sum = 0;
-  let sumSquares = 0;
-
-  for (let simulationIndex = 0; simulationIndex < iterations; simulationIndex += 1) {
-    let total = 0;
-
-    for (const sides of diceSidesPool) {
-      total += Math.floor(rng() * sides) + 1;
-    }
-
-    histogram.set(total, (histogram.get(total) ?? 0) + 1);
-    min = Math.min(min, total);
-    max = Math.max(max, total);
-    sum += total;
-    sumSquares += total * total;
-  }
-
-  const mean = sum / iterations;
-  const variance = Math.max(0, sumSquares / iterations - mean * mean);
-  const stdDev = Math.sqrt(variance);
-
-  const distributionEntries = [...histogram.entries()].sort((a, b) => a[0] - b[0]);
-  let runningFrequency = 0;
-
-  const distribution: DistributionPoint[] = distributionEntries.map(([total, frequency]) => {
-    runningFrequency += frequency;
-    return {
-      total,
-      frequency,
-      probability: frequency / iterations,
-      cumulativeProbability: runningFrequency / iterations,
-    };
-  });
-
-  return {
-    stats: {
-      iterations,
-      min: Number.isFinite(min) ? min : 0,
-      max: Number.isFinite(max) ? max : 0,
-      mean,
-      median: getMedianFromDistribution(histogram, iterations),
-      stdDev,
-    },
-    distribution,
-  };
+  return buildSimulationResult(accumulator, iterations);
 }

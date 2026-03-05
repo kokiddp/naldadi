@@ -3,7 +3,11 @@ import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { createEmptyThrowConfig, type ThrowConfig } from '../../../../core/dice.model';
-import { runSimulation, type SimulationResult } from '../../../../core/simulation.engine';
+import {
+  SimulationCancelledError,
+  runSimulationProgressive,
+  type SimulationResult,
+} from '../../../../core/simulation.engine';
 import {
   getTotalDice,
   validateIterations,
@@ -24,6 +28,9 @@ export class DiceAnalysisPage {
   protected readonly simulation = signal<SimulationResult | null>(null);
   protected readonly isRunning = signal(false);
   protected readonly statusMessage = signal<string | null>(null);
+  protected readonly progressPercent = signal(0);
+  protected readonly completedIterations = signal(0);
+  protected readonly cancelRequested = signal(false);
 
   protected readonly validationError = computed(() => {
     const throwError = validateThrowConfig(this.config())[0] ?? null;
@@ -47,20 +54,62 @@ export class DiceAnalysisPage {
     this.iterations.set(Number.isNaN(parsed) ? 0 : parsed);
   }
 
-  protected run(): void {
+  protected async run(): Promise<void> {
     if (!this.canRun()) {
       return;
     }
 
+    const iterationCount = this.iterations();
+
     this.isRunning.set(true);
+    this.cancelRequested.set(false);
+    this.progressPercent.set(0);
+    this.completedIterations.set(0);
     this.statusMessage.set('Simulation in progress...');
 
-    // Yield once so status paint is visible before a large synchronous run starts.
-    setTimeout(() => {
-      const nextSimulation = runSimulation(this.config(), this.iterations());
+    try {
+      const nextSimulation = await runSimulationProgressive(this.config(), iterationCount, {
+        chunkSize: this.pickChunkSize(iterationCount),
+        onProgress: (progress) => {
+          this.completedIterations.set(progress.completedIterations);
+          this.progressPercent.set(progress.progressPercent);
+        },
+        shouldCancel: () => this.cancelRequested(),
+      });
+
       this.simulation.set(nextSimulation);
       this.statusMessage.set(`Simulation complete for ${nextSimulation.stats.iterations.toLocaleString()} runs.`);
+    } catch (error: unknown) {
+      if (error instanceof SimulationCancelledError) {
+        this.statusMessage.set(
+          `Simulation cancelled at ${this.completedIterations().toLocaleString()} / ${iterationCount.toLocaleString()} runs.`,
+        );
+      } else {
+        this.statusMessage.set('Simulation failed unexpectedly. Please try again.');
+      }
+    } finally {
       this.isRunning.set(false);
-    }, 0);
+    }
+  }
+
+  protected cancel(): void {
+    if (!this.isRunning()) {
+      return;
+    }
+
+    this.cancelRequested.set(true);
+    this.statusMessage.set('Cancelling simulation...');
+  }
+
+  private pickChunkSize(iterationCount: number): number {
+    if (iterationCount <= 50000) {
+      return 5000;
+    }
+
+    if (iterationCount <= 500000) {
+      return 20000;
+    }
+
+    return 50000;
   }
 }

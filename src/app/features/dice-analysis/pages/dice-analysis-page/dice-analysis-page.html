@@ -19,6 +19,19 @@
 			<button type="button" (click)="run()" [disabled]="!canRun()">
 				{{ isRunning() ? 'Running...' : 'Run Simulation' }}
 			</button>
+			<button type="button" class="cancel-btn" *ngIf="isRunning()" (click)="cancel()">
+				Cancel Simulation
+			</button>
+
+			<div class="progress-wrap" *ngIf="isRunning()">
+				<div class="progress-meta">
+					<span>{{ progressPercent().toFixed(1) }}%</span>
+					<span>{{ completedIterations().toLocaleString() }} / {{ iterations().toLocaleString() }} runs</span>
+				</div>
+				<div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressPercent().toFixed(1)">
+					<div class="progress-fill" [style.width.%]="progressPercent()"></div>
+				</div>
+			</div>
 
 			<p class="error" *ngIf="validationError() as error">{{ error }}</p>
 			<p class="status" *ngIf="statusMessage() as message">{{ message }}</p>

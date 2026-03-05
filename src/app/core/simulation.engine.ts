@@ -12,12 +12,34 @@ export interface SimulationStats {
   readonly iterations: number;
   readonly min: number;
   readonly max: number;
+  readonly range: number;
   readonly mean: number;
   readonly median: number;
+  readonly mode: number;
+  readonly modeFrequency: number;
+  readonly modeProbability: number;
+  readonly variance: number;
   readonly stdDev: number;
+  readonly coeffVariation: number;
+  readonly q1: number;
+  readonly q3: number;
+  readonly iqr: number;
+  readonly p05: number;
+  readonly p95: number;
+  readonly p99: number;
+  readonly skewness: number;
+  readonly excessKurtosis: number;
+  readonly entropyBits: number;
+  readonly uniqueTotals: number;
+  readonly durationMs: number;
+  readonly throwsPerSecond: number;
+  readonly theoreticalMean: number;
+  readonly theoreticalStdDev: number;
+  readonly meanDelta: number;
 }
 
 export interface SimulationResult {
+  readonly config: ThrowConfig;
   readonly stats: SimulationStats;
   readonly distribution: DistributionPoint[];
 }
@@ -52,11 +74,20 @@ interface SimulationAccumulator {
 }
 
 interface DiceGroup {
+  readonly dieType: (typeof DIE_TYPES)[number];
   readonly sides: number;
   readonly count: number;
 }
 
-function createDiceGroups(config: ThrowConfig): DiceGroup[] {
+function nowMs(): number {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+    return performance.now();
+  }
+
+  return Date.now();
+}
+
+function createDiceGroups(config: ThrowConfig): { normalizedConfig: ThrowConfig; groups: DiceGroup[] } {
   const normalizedConfig = normalizeThrowConfig(config);
   const groups: DiceGroup[] = [];
 
@@ -65,11 +96,11 @@ function createDiceGroups(config: ThrowConfig): DiceGroup[] {
     const count = normalizedConfig[dieType];
 
     if (count > 0) {
-      groups.push({ sides, count });
+      groups.push({ dieType, sides, count });
     }
   }
 
-  return groups;
+  return { normalizedConfig, groups };
 }
 
 function createAccumulator(): SimulationAccumulator {
@@ -105,7 +136,55 @@ function runIterationBatch(
   }
 }
 
-function buildSimulationResult(accumulator: SimulationAccumulator, iterations: number): SimulationResult {
+function getQuantileFromDistribution(histogram: Map<number, number>, iterations: number, quantile: number): number {
+  const sortedTotals = [...histogram.entries()].sort((a, b) => a[0] - b[0]);
+  const target = Math.max(1, Math.ceil(quantile * iterations));
+  let running = 0;
+
+  for (const [total, frequency] of sortedTotals) {
+    running += frequency;
+    if (running >= target) {
+      return total;
+    }
+  }
+
+  return sortedTotals[sortedTotals.length - 1]?.[0] ?? 0;
+}
+
+function getMedianFromDistribution(histogram: Map<number, number>, iterations: number): number {
+  const lowerTarget = Math.floor((iterations + 1) / 2);
+  const upperTarget = Math.floor((iterations + 2) / 2);
+
+  const lower = getQuantileFromDistribution(histogram, iterations, lowerTarget / iterations);
+  const upper = getQuantileFromDistribution(histogram, iterations, upperTarget / iterations);
+
+  return (lower + upper) / 2;
+}
+
+function computeTheoreticalStats(diceGroups: DiceGroup[]): { mean: number; stdDev: number } {
+  let mean = 0;
+  let variance = 0;
+
+  for (const group of diceGroups) {
+    const dieMean = (group.sides + 1) / 2;
+    const dieVariance = (group.sides * group.sides - 1) / 12;
+    mean += group.count * dieMean;
+    variance += group.count * dieVariance;
+  }
+
+  return {
+    mean,
+    stdDev: Math.sqrt(Math.max(0, variance)),
+  };
+}
+
+function buildSimulationResult(
+  normalizedConfig: ThrowConfig,
+  diceGroups: DiceGroup[],
+  accumulator: SimulationAccumulator,
+  iterations: number,
+  durationMs: number,
+): SimulationResult {
   const mean = accumulator.sum / iterations;
   const variance = Math.max(0, accumulator.sumSquares / iterations - mean * mean);
   const stdDev = Math.sqrt(variance);
@@ -123,45 +202,73 @@ function buildSimulationResult(accumulator: SimulationAccumulator, iterations: n
     };
   });
 
+  let mode = 0;
+  let modeFrequency = 0;
+  let entropyBits = 0;
+  let centeredMoment3 = 0;
+  let centeredMoment4 = 0;
+
+  for (const point of distribution) {
+    if (point.frequency > modeFrequency) {
+      modeFrequency = point.frequency;
+      mode = point.total;
+    }
+
+    if (point.probability > 0) {
+      entropyBits -= point.probability * Math.log2(point.probability);
+    }
+
+    const delta = point.total - mean;
+    centeredMoment3 += point.probability * delta * delta * delta;
+    centeredMoment4 += point.probability * delta * delta * delta * delta;
+  }
+
+  const skewness = stdDev > 0 ? centeredMoment3 / (stdDev * stdDev * stdDev) : 0;
+  const excessKurtosis = stdDev > 0 ? centeredMoment4 / (stdDev * stdDev * stdDev * stdDev) - 3 : 0;
+
+  const q1 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.25);
+  const q3 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.75);
+  const p05 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.05);
+  const p95 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.95);
+  const p99 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.99);
+
+  const theoretical = computeTheoreticalStats(diceGroups);
+
   return {
+    config: normalizedConfig,
     stats: {
       iterations,
       min: Number.isFinite(accumulator.min) ? accumulator.min : 0,
       max: Number.isFinite(accumulator.max) ? accumulator.max : 0,
+      range: Number.isFinite(accumulator.min) && Number.isFinite(accumulator.max)
+        ? accumulator.max - accumulator.min
+        : 0,
       mean,
       median: getMedianFromDistribution(accumulator.histogram, iterations),
+      mode,
+      modeFrequency,
+      modeProbability: modeFrequency / iterations,
+      variance,
       stdDev,
+      coeffVariation: mean !== 0 ? stdDev / Math.abs(mean) : 0,
+      q1,
+      q3,
+      iqr: q3 - q1,
+      p05,
+      p95,
+      p99,
+      skewness,
+      excessKurtosis,
+      entropyBits,
+      uniqueTotals: distribution.length,
+      durationMs,
+      throwsPerSecond: durationMs > 0 ? iterations / (durationMs / 1000) : 0,
+      theoreticalMean: theoretical.mean,
+      theoreticalStdDev: theoretical.stdDev,
+      meanDelta: mean - theoretical.mean,
     },
     distribution,
   };
-}
-
-function getMedianFromDistribution(histogram: Map<number, number>, iterations: number): number {
-  const sortedTotals = [...histogram.entries()].sort((a, b) => a[0] - b[0]);
-  const lowerTarget = Math.floor((iterations + 1) / 2);
-  const upperTarget = Math.floor((iterations + 2) / 2);
-
-  let running = 0;
-  let lowerValue = 0;
-  let upperValue = 0;
-
-  for (const [total, frequency] of sortedTotals) {
-    const start = running + 1;
-    const end = running + frequency;
-
-    if (lowerValue === 0 && lowerTarget >= start && lowerTarget <= end) {
-      lowerValue = total;
-    }
-
-    if (upperValue === 0 && upperTarget >= start && upperTarget <= end) {
-      upperValue = total;
-      break;
-    }
-
-    running = end;
-  }
-
-  return (lowerValue + upperValue) / 2;
 }
 
 export function runSimulation(
@@ -169,12 +276,13 @@ export function runSimulation(
   iterations: number,
   rng: () => number = Math.random,
 ): SimulationResult {
-  const diceGroups = createDiceGroups(config);
+  const startMs = nowMs();
+  const { normalizedConfig, groups } = createDiceGroups(config);
   const accumulator = createAccumulator();
 
-  runIterationBatch(accumulator, diceGroups, iterations, rng);
+  runIterationBatch(accumulator, groups, iterations, rng);
 
-  return buildSimulationResult(accumulator, iterations);
+  return buildSimulationResult(normalizedConfig, groups, accumulator, iterations, nowMs() - startMs);
 }
 
 export async function runSimulationProgressive(
@@ -182,6 +290,7 @@ export async function runSimulationProgressive(
   iterations: number,
   options: ProgressiveSimulationOptions = {},
 ): Promise<SimulationResult> {
+  const startMs = nowMs();
   const rng = options.rng ?? Math.random;
   const chunkSize = Math.max(1, Math.trunc(options.chunkSize ?? 25000));
   const onProgress = options.onProgress;
@@ -190,7 +299,7 @@ export async function runSimulationProgressive(
     setTimeout(resolve, 0);
   }));
 
-  const diceGroups = createDiceGroups(config);
+  const { normalizedConfig, groups } = createDiceGroups(config);
   const accumulator = createAccumulator();
 
   let completedIterations = 0;
@@ -204,7 +313,7 @@ export async function runSimulationProgressive(
     const remaining = iterations - completedIterations;
     const currentBatchSize = Math.min(chunkSize, remaining);
 
-    runIterationBatch(accumulator, diceGroups, currentBatchSize, rng);
+    runIterationBatch(accumulator, groups, currentBatchSize, rng);
     completedIterations += currentBatchSize;
 
     onProgress?.({
@@ -218,5 +327,5 @@ export async function runSimulationProgressive(
     }
   }
 
-  return buildSimulationResult(accumulator, iterations);
+  return buildSimulationResult(normalizedConfig, groups, accumulator, iterations, nowMs() - startMs);
 }

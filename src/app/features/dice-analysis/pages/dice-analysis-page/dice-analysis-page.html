@@ -38,34 +38,143 @@
 		</div>
 	</div>
 
-	<section class="stats-grid" *ngIf="simulation() as result">
-		<article>
+	<section class="composition" *ngIf="activeCompositionRows().length > 0">
+		<h3>Throw Composition and Multiplicity</h3>
+		<div class="composition-grid">
+			<article class="info-card" tabindex="0" [attr.data-help]="multiplicityHelp.perDieType">
+				<h4>Per Die Type</h4>
+				<ul>
+					<li *ngFor="let row of activeCompositionRows(); trackBy: trackByDieType">
+						<strong>{{ row.dieType }}</strong>
+						<span>{{ row.count }} dice ({{ row.multiplicityLabel }})</span>
+					</li>
+				</ul>
+			</article>
+
+			<article class="info-card" tabindex="0" [attr.data-help]="multiplicityHelp.combined">
+				<h4>Combined Multiplicity</h4>
+				<ul>
+					<li *ngFor="let group of multiplicityGroups(); trackBy: trackByMultiplicity">
+						<strong>{{ group.label }}</strong>
+						<span>{{ group.dieTypeCount }} die types, {{ group.totalDice }} dice total</span>
+					</li>
+				</ul>
+			</article>
+		</div>
+	</section>
+
+	<section class="stats-grid" *ngIf="!isRunning() && simulation() as result">
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.iterations">
 			<h3>Iterations</h3>
 			<p>{{ result.stats.iterations.toLocaleString() }}</p>
 		</article>
-		<article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.duration">
+			<h3>Duration</h3>
+			<p>{{ result.stats.durationMs.toFixed(1) }} ms</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.throughput">
+			<h3>Throughput</h3>
+			<p>{{ result.stats.throwsPerSecond.toFixed(0) }} throws/s</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.minMax">
 			<h3>Min / Max</h3>
 			<p>{{ result.stats.min }} / {{ result.stats.max }}</p>
 		</article>
-		<article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.range">
+			<h3>Range</h3>
+			<p>{{ result.stats.range }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.mean">
 			<h3>Mean</h3>
 			<p>{{ result.stats.mean.toFixed(2) }}</p>
 		</article>
-		<article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.theoreticalMean">
+			<h3>Theoretical Mean</h3>
+			<p>{{ result.stats.theoreticalMean.toFixed(2) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.meanDelta">
+			<h3>Mean Delta</h3>
+			<p>{{ result.stats.meanDelta.toFixed(4) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.median">
 			<h3>Median</h3>
 			<p>{{ result.stats.median.toFixed(2) }}</p>
 		</article>
-		<article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.mode">
+			<h3>Mode</h3>
+			<p>{{ result.stats.mode }} ({{ formatPercent(result.stats.modeProbability) }})</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.stdDev">
 			<h3>Std Dev</h3>
 			<p>{{ result.stats.stdDev.toFixed(2) }}</p>
 		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.theoreticalStdDev">
+			<h3>Theoretical Std Dev</h3>
+			<p>{{ result.stats.theoreticalStdDev.toFixed(2) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.variance">
+			<h3>Variance</h3>
+			<p>{{ result.stats.variance.toFixed(2) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.coeffVariation">
+			<h3>Coeff. Variation</h3>
+			<p>{{ formatPercent(result.stats.coeffVariation) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.q1Q3">
+			<h3>Q1 / Q3</h3>
+			<p>{{ result.stats.q1 }} / {{ result.stats.q3 }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.iqr">
+			<h3>IQR</h3>
+			<p>{{ result.stats.iqr }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.percentiles">
+			<h3>P05 / P95 / P99</h3>
+			<p>{{ result.stats.p05 }} / {{ result.stats.p95 }} / {{ result.stats.p99 }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.skewness">
+			<h3>Skewness</h3>
+			<p>{{ result.stats.skewness.toFixed(4) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.excessKurtosis">
+			<h3>Excess Kurtosis</h3>
+			<p>{{ result.stats.excessKurtosis.toFixed(4) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.entropy">
+			<h3>Entropy</h3>
+			<p>{{ result.stats.entropyBits.toFixed(4) }} bits</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.uniqueTotals">
+			<h3>Unique Totals</h3>
+			<p>{{ result.stats.uniqueTotals }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.withinSigma">
+			<h3>Within 1 sigma</h3>
+			<p>{{ formatPercent(centralBandProbability()) }}</p>
+		</article>
+		<article class="stat-card" tabindex="0" [attr.data-help]="statHelp.belowAboveMean">
+			<h3>Below / At or Above Mean</h3>
+			<p>{{ formatPercent(belowMeanProbability()) }} / {{ formatPercent(atOrAboveMeanProbability()) }}</p>
+		</article>
 	</section>
 
-	<section class="charts" *ngIf="simulation() as result">
+	<section class="outcomes" *ngIf="!isRunning() && simulation() !== null">
+		<h3>Top Outcomes by Probability</h3>
+		<ul>
+			<li *ngFor="let point of topOutcomes(); trackBy: trackByTotal">
+				<strong>Total {{ point.total }}</strong>
+				<span>{{ point.frequency.toLocaleString() }} hits ({{ formatPercent(point.probability) }})</span>
+			</li>
+		</ul>
+	</section>
+
+	<section class="charts" *ngIf="!isRunning() && simulation() as result">
 		<app-distribution-chart
 			[points]="result.distribution"
 			title="Histogram (Frequencies)"
 			mode="histogram"
+			[meanMarker]="result.stats.mean"
+			[medianMarker]="result.stats.median"
 		/>
 		<app-distribution-chart [points]="result.distribution" title="CDF (Cumulative Probability)" mode="cdf" />
 	</section>

@@ -1,17 +1,48 @@
 <section class="chart-wrap" *ngIf="points.length > 0; else noData">
   <h3>{{ title }}</h3>
 
-  <div class="bars" *ngIf="mode === 'histogram'">
-    <div class="bar-item" *ngFor="let point of points; trackBy: trackByTotal">
-      <span class="bar-label">{{ point.total }}</span>
-      <div class="bar-track">
+  <div class="histogram-wrap" *ngIf="mode === 'histogram'">
+    <div class="marker mean-marker" *ngIf="meanMarker !== null" [style.left.%]="markerLeft(meanMarker)">
+      <span>Mean {{ meanMarker.toFixed(2) }}</span>
+    </div>
+    <div class="marker median-marker" *ngIf="medianMarker !== null" [style.left.%]="markerLeft(medianMarker)">
+      <span>Median {{ medianMarker.toFixed(2) }}</span>
+    </div>
+
+    <div
+      class="floating-tooltip"
+      *ngIf="tooltipVisible"
+      [class.below-cursor]="tooltipBelowCursor"
+      [style.left.px]="tooltipLeft"
+      [style.top.px]="tooltipTop"
+    >
+      {{ tooltipText }}
+    </div>
+
+    <div class="bars">
+      <div class="bar-item" *ngFor="let point of histogramPoints; let index = index; trackBy: trackByHistogramKey">
+        <span class="bar-label" [class.hidden]="!shouldRenderLabel(index)">{{ point.shortLabel }}</span>
         <div
-          class="bar-fill"
-          [style.height.%]="(point.frequency / maxFrequency) * 100"
-          [attr.title]="'Total ' + point.total + ': ' + point.frequency + ' results'"
-        ></div>
+          class="bar-track"
+          (mousemove)="onBarHover($event, point)"
+          (mouseenter)="onBarHover($event, point)"
+          (mouseleave)="onBarLeave()"
+          (focusin)="onBarFocus(point)"
+          (focusout)="onBarLeave()"
+        >
+          <div
+            class="bar-fill"
+            tabindex="0"
+            [style.height.%]="(point.frequency / maxFrequency) * 100"
+            [attr.aria-label]="getHistogramTooltip(point)"
+          ></div>
+        </div>
       </div>
     </div>
+
+    <p class="chart-note" *ngIf="isBinnedHistogram">
+      Histogram is binned for readability and performance. Hover bars for exact percentages.
+    </p>
   </div>
 
   <div class="line-chart" *ngIf="mode === 'cdf'">

@@ -41,7 +41,10 @@ describe('throw.validators', () => {
       d6: -1,
     };
 
-    expect(validateThrowConfig(badConfig)).toContainEqual({ key: 'invalidDieCount', dieType: 'd6' });
+    expect(validateThrowConfig(badConfig)).toContainEqual({
+      key: 'invalidDieCount',
+      dieType: 'd6',
+    });
   });
 
   it('incrementDie/decrementDie and total dice behave consistently', () => {

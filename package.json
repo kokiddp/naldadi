@@ -22,7 +22,8 @@
     "start:dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "format:check": "prettier --check \"src/**/*.spec.ts\" \".github/workflows/*.yml\""
   },
   "private": true,
   "packageManager": "npm@10.8.2",

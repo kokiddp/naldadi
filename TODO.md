@@ -40,7 +40,7 @@
 - [x] Unit tests for dice roll and simulation engines
 - [x] Unit tests for stats calculations
 - [ ] Add E2E smoke test for both routes
-- [ ] Add lint/format check to CI pipeline
+- [x] Add lint/format check to CI pipeline
 
 ## Release and Deployment
 
@@ -48,11 +48,11 @@
 - [x] Add repository metadata to package manifest
 - [x] Add production Node static server (`PORT`-aware)
 - [x] Add CI workflow for build + test on pull requests
-- [ ] Add automated release/versioning strategy
+- [x] Add automated release/versioning strategy
 
 ## Internationalization
 
 - [x] Make UI strings translatable via runtime i18n service
 - [x] Add Italian translations
 - [x] Auto-detect language from browser locale
-- [ ] Add translation coverage tests/checks for missing keys
+- [x] Add translation coverage tests/checks for missing keys

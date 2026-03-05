@@ -13,6 +13,8 @@ export const EN_DICTIONARY: Dictionary = {
   'throw.total': 'Total',
   'throw.history': 'Throw History',
   'throw.historyTotal': 'Total {{total}}',
+  'throw.history.delete': 'Delete',
+  'throw.history.clear': 'Clear All',
 
   'analysis.title': 'Dice Analysis',
   'analysis.subtitle': 'Compose the same throw as Dice Throw mode and simulate at scale.',
@@ -107,6 +109,18 @@ export const EN_DICTIONARY: Dictionary = {
   'analysis.probabilityBuckets.label.finalRange': '{{from}}% to {{to}}%',
   'analysis.probabilityBuckets.entry': 'Total {{total}} ({{probability}})',
   'analysis.probabilityBuckets.empty': 'No totals in this range.',
+
+  'analysis.saved.title': 'Saved Analysis Runs',
+  'analysis.saved.load': 'Rehydrate',
+  'analysis.saved.delete': 'Delete',
+  'analysis.saved.clear': 'Clear All',
+  'analysis.saved.itemTitle': '{{iterations}} runs, {{totalDice}} dice - {{date}}',
+  'analysis.saved.itemSummary': 'Range {{min}}-{{max}}, mean {{mean}}, std dev {{stdDev}}',
+  'analysis.saved.status.loaded': 'Loaded saved analysis from {{date}}.',
+
+  'pagination.previous': 'Previous',
+  'pagination.next': 'Next',
+  'pagination.pageInfo': 'Page {{page}} of {{totalPages}}',
 
   'composer.title': 'Throw Composer',
   'composer.aria.decrease': 'Decrease {{dieType}} count',

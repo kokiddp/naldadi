@@ -74,6 +74,17 @@ button:disabled {
 	margin-top: 1rem;
 }
 
+.history-header {
+	align-items: center;
+	display: flex;
+	gap: 0.8rem;
+	justify-content: space-between;
+}
+
+.history-header h3 {
+	margin: 0;
+}
+
 .history ul {
 	display: grid;
 	gap: 0.5rem;
@@ -83,17 +94,52 @@ button:disabled {
 }
 
 .history li {
+	align-items: start;
 	background: rgba(20, 48, 70, 0.08);
 	border-radius: 10px;
-	display: grid;
+	display: flex;
 	gap: 0.25rem;
+	justify-content: space-between;
 	padding: 0.65rem;
 	word-break: break-word;
+}
+
+.history li > div {
+	display: grid;
+	gap: 0.25rem;
+}
+
+.history-delete-btn,
+.history-clear-btn {
+	margin-top: 0;
+	padding: 0.45rem 0.75rem;
+	white-space: nowrap;
+}
+
+.history-delete-btn {
+	background: #7a2e1b;
+}
+
+.history-pagination {
+	align-items: center;
+	display: flex;
+	gap: 0.6rem;
+	justify-content: center;
+	margin-top: 0.6rem;
+}
+
+.history-pagination span {
+	color: #294357;
+	font-size: 0.92rem;
 }
 
 @media (max-width: 800px) {
 	.layout {
 		grid-template-columns: 1fr;
+	}
+
+	.history li {
+		flex-direction: column;
 	}
 }
 
@@ -104,5 +150,14 @@ button:disabled {
 
 	button {
 		width: 100%;
+	}
+
+	.history-header {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.history-pagination {
+		flex-wrap: wrap;
 	}
 }

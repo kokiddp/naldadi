@@ -47,6 +47,12 @@ interface ProbabilityBucketStat {
   readonly points: ReadonlyArray<DistributionPoint>;
 }
 
+interface SavedAnalysisItem {
+  readonly id: number;
+  readonly createdAt: number;
+  readonly result: SimulationResult;
+}
+
 @Component({
   selector: 'app-dice-analysis-page',
   imports: [CommonModule, FormsModule, ThrowComposer, DistributionChart],
@@ -54,11 +60,16 @@ interface ProbabilityBucketStat {
   styleUrl: './dice-analysis-page.scss',
 })
 export class DiceAnalysisPage {
+  private readonly savedRunsStorageKey = 'naldadi.analysis.savedRuns';
+  private readonly maxSavedRuns = 200;
+  private readonly pageSize = 20;
   private readonly i18n = inject(I18nService);
   protected readonly dieTypes = DIE_TYPES;
   protected readonly config = signal<ThrowConfig>(createEmptyThrowConfig());
   protected readonly iterations = signal(10000);
   protected readonly simulation = signal<SimulationResult | null>(null);
+  protected readonly savedRuns = signal<SavedAnalysisItem[]>(this.loadSavedRuns());
+  protected readonly savedRunsPage = signal(1);
   protected readonly isRunning = signal(false);
   protected readonly statusMessage = signal<string | null>(null);
   protected readonly progressPercent = signal(0);
@@ -76,6 +87,18 @@ export class DiceAnalysisPage {
 
   protected readonly canRun = computed(
     () => getTotalDice(this.config()) > 0 && this.validationError() === null && !this.isRunning(),
+  );
+  protected readonly totalSavedRunsPages = computed(() =>
+    Math.max(1, Math.ceil(this.savedRuns().length / this.pageSize)),
+  );
+  protected readonly pagedSavedRuns = computed(() => {
+    const page = Math.min(this.savedRunsPage(), this.totalSavedRunsPages());
+    const start = (page - 1) * this.pageSize;
+    return this.savedRuns().slice(start, start + this.pageSize);
+  });
+  protected readonly canGoToPreviousSavedRunsPage = computed(() => this.savedRunsPage() > 1);
+  protected readonly canGoToNextSavedRunsPage = computed(
+    () => this.savedRunsPage() < this.totalSavedRunsPages(),
   );
 
   protected readonly compositionRows = computed<CompositionRow[]>(() => {
@@ -258,6 +281,7 @@ export class DiceAnalysisPage {
       });
 
       this.simulation.set(nextSimulation);
+      this.saveRun(nextSimulation);
       this.statusMessage.set(
         this.i18n.t('analysis.status.complete', {
           iterations: nextSimulation.stats.iterations.toLocaleString(),
@@ -316,6 +340,73 @@ export class DiceAnalysisPage {
     return row.toPercent;
   }
 
+  protected trackBySavedRun(_: number, item: SavedAnalysisItem): number {
+    return item.id;
+  }
+
+  protected rehydrateSavedRun(item: SavedAnalysisItem): void {
+    if (this.isRunning()) {
+      return;
+    }
+
+    this.config.set(item.result.config);
+    this.iterations.set(item.result.stats.iterations);
+    this.simulation.set(item.result);
+    this.statusMessage.set(
+      this.i18n.t('analysis.saved.status.loaded', {
+        date: new Date(item.createdAt).toLocaleString(),
+      }),
+    );
+  }
+
+  protected formatSavedRunTitle(item: SavedAnalysisItem): string {
+    return this.i18n.t('analysis.saved.itemTitle', {
+      iterations: item.result.stats.iterations.toLocaleString(),
+      totalDice: item.result.stats.totalDice,
+      date: new Date(item.createdAt).toLocaleString(),
+    });
+  }
+
+  protected formatSavedRunSummary(item: SavedAnalysisItem): string {
+    return this.i18n.t('analysis.saved.itemSummary', {
+      min: item.result.stats.min,
+      max: item.result.stats.max,
+      mean: item.result.stats.mean.toFixed(2),
+      stdDev: item.result.stats.stdDev.toFixed(2),
+    });
+  }
+
+  protected deleteSavedRun(itemId: number): void {
+    this.savedRuns.update((current) => {
+      const next = current.filter((item) => item.id !== itemId);
+      this.persistSavedRuns(next);
+      return next;
+    });
+    this.clampSavedRunsPage();
+  }
+
+  protected clearSavedRuns(): void {
+    this.savedRuns.set([]);
+    this.persistSavedRuns([]);
+    this.savedRunsPage.set(1);
+  }
+
+  protected previousSavedRunsPage(): void {
+    if (!this.canGoToPreviousSavedRunsPage()) {
+      return;
+    }
+
+    this.savedRunsPage.update((current) => Math.max(1, current - 1));
+  }
+
+  protected nextSavedRunsPage(): void {
+    if (!this.canGoToNextSavedRunsPage()) {
+      return;
+    }
+
+    this.savedRunsPage.update((current) => Math.min(this.totalSavedRunsPages(), current + 1));
+  }
+
   protected formatProbabilityBucketLabel(row: ProbabilityBucketStat): string {
     if (row.fromPercent === 0) {
       return this.i18n.t('analysis.probabilityBuckets.label.lessThan', { to: row.toPercent });
@@ -344,6 +435,72 @@ export class DiceAnalysisPage {
     }
 
     return 50000;
+  }
+
+  private saveRun(result: SimulationResult): void {
+    const item: SavedAnalysisItem = {
+      id: Date.now(),
+      createdAt: Date.now(),
+      result,
+    };
+
+    this.savedRuns.update((current) => {
+      const next = [item, ...current].slice(0, this.maxSavedRuns);
+      this.persistSavedRuns(next);
+      return next;
+    });
+    this.savedRunsPage.set(1);
+  }
+
+  private persistSavedRuns(items: SavedAnalysisItem[]): void {
+    try {
+      localStorage.setItem(this.savedRunsStorageKey, JSON.stringify(items));
+    } catch {
+      // Ignore persistence failures (private mode/quota issues).
+    }
+  }
+
+  private loadSavedRuns(): SavedAnalysisItem[] {
+    try {
+      const raw = localStorage.getItem(this.savedRunsStorageKey);
+      if (raw === null) {
+        return [];
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed
+        .filter((item): item is SavedAnalysisItem => this.isSavedAnalysisItem(item))
+        .slice(0, this.maxSavedRuns);
+    } catch {
+      return [];
+    }
+  }
+
+  private clampSavedRunsPage(): void {
+    this.savedRunsPage.update((current) => Math.min(current, this.totalSavedRunsPages()));
+  }
+
+  private isSavedAnalysisItem(value: unknown): value is SavedAnalysisItem {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+
+    const candidate = value as Partial<SavedAnalysisItem>;
+    return (
+      typeof candidate.id === 'number' &&
+      typeof candidate.createdAt === 'number' &&
+      typeof candidate.result === 'object' &&
+      candidate.result !== null &&
+      Array.isArray((candidate.result as Partial<SimulationResult>).distribution) &&
+      typeof (candidate.result as Partial<SimulationResult>).stats === 'object' &&
+      (candidate.result as Partial<SimulationResult>).stats !== null &&
+      typeof (candidate.result as Partial<SimulationResult>).config === 'object' &&
+      (candidate.result as Partial<SimulationResult>).config !== null
+    );
   }
 
   private multiplicityLabel(count: number): string {

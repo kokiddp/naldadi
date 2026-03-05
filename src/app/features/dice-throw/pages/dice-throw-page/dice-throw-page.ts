@@ -20,17 +20,33 @@ interface ThrowHistoryItem {
   styleUrl: './dice-throw-page.scss',
 })
 export class DiceThrowPage {
+  private readonly historyStorageKey = 'naldadi.throw.history';
+  private readonly maxStoredHistoryItems = 200;
+  private readonly pageSize = 20;
   private readonly i18n = inject(I18nService);
   protected readonly dieTypes = DIE_TYPES;
   protected readonly config = signal<ThrowConfig>(createEmptyThrowConfig());
   protected readonly result = signal<ThrowRollResult | null>(null);
-  protected readonly history = signal<ThrowHistoryItem[]>([]);
+  protected readonly history = signal<ThrowHistoryItem[]>(this.loadHistory());
+  protected readonly historyPage = signal(1);
 
   protected readonly canRoll = computed(() => getTotalDice(this.config()) > 0);
   protected readonly validationError = computed(() => {
     const error = validateThrowConfig(this.config())[0] ?? null;
     return error === null ? null : this.translateThrowValidationError(error);
   });
+  protected readonly totalHistoryPages = computed(() =>
+    Math.max(1, Math.ceil(this.history().length / this.pageSize)),
+  );
+  protected readonly pagedHistory = computed(() => {
+    const page = Math.min(this.historyPage(), this.totalHistoryPages());
+    const start = (page - 1) * this.pageSize;
+    return this.history().slice(start, start + this.pageSize);
+  });
+  protected readonly canGoToPreviousHistoryPage = computed(() => this.historyPage() > 1);
+  protected readonly canGoToNextHistoryPage = computed(
+    () => this.historyPage() < this.totalHistoryPages(),
+  );
 
   protected onConfigChange(updatedConfig: ThrowConfig): void {
     this.config.set(updatedConfig);
@@ -53,7 +69,43 @@ export class DiceThrowPage {
       summary,
     };
 
-    this.history.update((current) => [item, ...current].slice(0, 12));
+    this.history.update((current) => {
+      const next = [item, ...current].slice(0, this.maxStoredHistoryItems);
+      this.persistHistory(next);
+      return next;
+    });
+    this.historyPage.set(1);
+  }
+
+  protected deleteHistoryItem(itemId: number): void {
+    this.history.update((current) => {
+      const next = current.filter((item) => item.id !== itemId);
+      this.persistHistory(next);
+      return next;
+    });
+    this.clampHistoryPage();
+  }
+
+  protected clearHistory(): void {
+    this.history.set([]);
+    this.persistHistory([]);
+    this.historyPage.set(1);
+  }
+
+  protected previousHistoryPage(): void {
+    if (!this.canGoToPreviousHistoryPage()) {
+      return;
+    }
+
+    this.historyPage.update((current) => Math.max(1, current - 1));
+  }
+
+  protected nextHistoryPage(): void {
+    if (!this.canGoToNextHistoryPage()) {
+      return;
+    }
+
+    this.historyPage.update((current) => Math.min(this.totalHistoryPages(), current + 1));
   }
 
   protected trackByHistoryId(_: number, item: ThrowHistoryItem): number {
@@ -75,5 +127,50 @@ export class DiceThrowPage {
     }
 
     return this.i18n.t('validator.noDiceSelected');
+  }
+
+  private persistHistory(items: ThrowHistoryItem[]): void {
+    try {
+      localStorage.setItem(this.historyStorageKey, JSON.stringify(items));
+    } catch {
+      // Ignore persistence failures (private mode/quota issues).
+    }
+  }
+
+  private loadHistory(): ThrowHistoryItem[] {
+    try {
+      const raw = localStorage.getItem(this.historyStorageKey);
+      if (raw === null) {
+        return [];
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed
+        .filter((item): item is ThrowHistoryItem => this.isThrowHistoryItem(item))
+        .slice(0, this.maxStoredHistoryItems);
+    } catch {
+      return [];
+    }
+  }
+
+  private isThrowHistoryItem(value: unknown): value is ThrowHistoryItem {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+
+    const candidate = value as Partial<ThrowHistoryItem>;
+    return (
+      typeof candidate.id === 'number' &&
+      typeof candidate.total === 'number' &&
+      typeof candidate.summary === 'string'
+    );
+  }
+
+  private clampHistoryPage(): void {
+    this.historyPage.update((current) => Math.min(current, this.totalHistoryPages()));
   }
 }

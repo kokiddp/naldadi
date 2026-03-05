@@ -13,6 +13,8 @@ export const IT_DICTIONARY: Dictionary = {
   'throw.total': 'Totale',
   'throw.history': 'Storico Lanci',
   'throw.historyTotal': 'Totale {{total}}',
+  'throw.history.delete': 'Elimina',
+  'throw.history.clear': 'Cancella Tutto',
 
   'analysis.title': 'Analisi Dadi',
   'analysis.subtitle': 'Componi lo stesso lancio della modalita Lancio Dadi e simulalo su larga scala.',
@@ -107,6 +109,18 @@ export const IT_DICTIONARY: Dictionary = {
   'analysis.probabilityBuckets.label.finalRange': 'Dal {{from}}% al {{to}}%',
   'analysis.probabilityBuckets.entry': 'Totale {{total}} ({{probability}})',
   'analysis.probabilityBuckets.empty': 'Nessun totale in questa fascia.',
+
+  'analysis.saved.title': 'Analisi Salvate',
+  'analysis.saved.load': 'Reidrata',
+  'analysis.saved.delete': 'Elimina',
+  'analysis.saved.clear': 'Cancella Tutto',
+  'analysis.saved.itemTitle': '{{iterations}} lanci, {{totalDice}} dadi - {{date}}',
+  'analysis.saved.itemSummary': 'Intervallo {{min}}-{{max}}, media {{mean}}, dev. std {{stdDev}}',
+  'analysis.saved.status.loaded': 'Analisi salvata caricata da {{date}}.',
+
+  'pagination.previous': 'Precedente',
+  'pagination.next': 'Successiva',
+  'pagination.pageInfo': 'Pagina {{page}} di {{totalPages}}',
 
   'composer.title': 'Compositore Lancio',
   'composer.aria.decrease': 'Diminuisci conteggio {{dieType}}',

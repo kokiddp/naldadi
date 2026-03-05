@@ -2,6 +2,8 @@
 
 NalDadi is an Angular app for simulating and analyzing dice throws.
 
+Repository: https://github.com/kokiddp/naldadi
+
 ## Product Goals
 
 - Provide a fast `Dice Throw` mode for rolling custom throw sets with any count of:
@@ -10,6 +12,29 @@ NalDadi is an Angular app for simulating and analyzing dice throws.
 	- Uses the same throw composition model as `Dice Throw`
 	- Simulates an arbitrarily large number of throws
 	- Shows stats and visual distributions
+
+## Current Features
+
+- Dice Throw
+	- Shared throw composer (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`)
+	- One-off roll with total and per-die breakdown
+	- Persistent throw history in local storage
+	- Single-item delete and clear-all history actions
+	- Pagination for history (20 items/page)
+
+- Dice Analysis
+	- Progressive simulation with cancellation and progress bar
+	- Rich descriptive statistics (center, spread, shape, quantiles)
+	- Exclusive exact-match multiplicity stats (double/triple/...)
+	- Histogram, CDF, PMF, and tail-probability charts
+	- Probability bucket grid (5% granularity)
+	- Persistent saved analyses with full view rehydration
+	- Single-item delete and clear-all saved analysis actions
+	- Pagination for saved analyses (20 items/page)
+
+- Localization
+	- Runtime i18n with browser language auto-detection
+	- English and Italian dictionaries split by language file
 
 ## Tech Stack
 
@@ -40,17 +65,41 @@ npm install
 2. Start the app:
 
 ```bash
-npm start
+npm run dev
 ```
 
 3. Open `http://localhost:4200`.
 
 ## Scripts
 
-- `npm start`: Start dev server
+- `npm run dev`: Start dev server
+- `npm start`: Start production Node server (serves built Angular app, honors `PORT`)
+- `npm run start:dev`: Alias for local dev server
 - `npm run build`: Build production bundle
 - `npm run watch`: Build in watch mode
 - `npm test`: Run unit tests
+
+## Production Run
+
+1. Build the app:
+
+```bash
+npm run build
+```
+
+2. Start production server:
+
+```bash
+npm start
+```
+
+3. Optional custom port:
+
+```bash
+PORT=5000 npm start
+```
+
+This startup model is compatible with platforms that inject a runtime `PORT` value.
 
 ## Current Structure
 
@@ -59,6 +108,7 @@ src/app/
 	app.html
 	app.routes.ts
 	core/i18n/
+	features/dice-analysis/components/
 	features/
 		dice-throw/pages/dice-throw-page/
 		dice-analysis/pages/dice-analysis-page/
@@ -75,6 +125,13 @@ src/app/
 
 See `TODO.md` for implementation tasks.
 
+## Publication Notes
+
+- License: MIT (`LICENSE`)
+- Package metadata includes repository, issues, homepage, and engine requirements.
+- Production entrypoint is `server.js` for static app serving in containerized or managed Node environments.
+
 ## Contributing
 
+Review `CONTRIBUTING.md` for local setup, testing expectations, and pull request workflow.
 Review `AGENTS.md` before making structural changes to align on architecture, coding boundaries, and quality checks.

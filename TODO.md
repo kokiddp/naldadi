@@ -18,6 +18,9 @@
 - [x] Implement one-off roll engine
 - [x] Display per-die results and total sum
 - [x] Add throw history list (latest N throws)
+- [x] Persist throw history to local storage
+- [x] Add throw history delete-one and clear-all actions
+- [x] Add throw history pagination (20 items/page)
 
 ## Dice Analysis Feature
 
@@ -26,13 +29,26 @@
 - [ ] Implement simulation worker/service for high-volume runs
 - [x] Compute summary statistics (min, max, mean, median, std dev)
 - [x] Display distributions and cumulative probability graphs
+- [x] Add PMF and tail-probability charts
+- [x] Persist saved analysis snapshots (aggregated data only)
+- [x] Add analysis snapshot rehydration
+- [x] Add analysis snapshot delete-one and clear-all actions
+- [x] Add analysis snapshot pagination (20 items/page)
 
 ## Quality
 
-- [ ] Unit tests for dice roll and simulation engines
-- [ ] Unit tests for stats calculations
+- [x] Unit tests for dice roll and simulation engines
+- [x] Unit tests for stats calculations
 - [ ] Add E2E smoke test for both routes
 - [ ] Add lint/format check to CI pipeline
+
+## Release and Deployment
+
+- [x] Add project license file (MIT)
+- [x] Add repository metadata to package manifest
+- [x] Add production Node static server (`PORT`-aware)
+- [x] Add CI workflow for build + test on pull requests
+- [ ] Add automated release/versioning strategy
 
 ## Internationalization
 

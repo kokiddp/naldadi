@@ -1,9 +1,25 @@
 {
   "name": "naldadi",
   "version": "0.0.0",
+  "description": "NalDadi - Dice throw simulator and statistical analysis app built with Angular.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kokiddp/naldadi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kokiddp/naldadi/issues"
+  },
+  "homepage": "https://github.com/kokiddp/naldadi",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "dev": "ng serve",
+    "start": "node server.js",
+    "start:dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -17,6 +33,7 @@
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "express": "^4.21.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

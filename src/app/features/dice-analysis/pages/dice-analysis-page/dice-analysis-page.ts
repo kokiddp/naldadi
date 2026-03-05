@@ -373,6 +373,7 @@ export class DiceAnalysisPage {
     return this.i18n.t('analysis.saved.itemTitle', {
       iterations: item.result.stats.iterations.toLocaleString(),
       totalDice: item.result.stats.totalDice,
+      diceTypes: this.formatSavedRunDiceTypes(item.result.config),
       date: new Date(item.createdAt).toLocaleString(),
     });
   }
@@ -514,6 +515,15 @@ export class DiceAnalysisPage {
     };
 
     return labels[count] ?? this.i18n.t('label.multiple', { count });
+  }
+
+  private formatSavedRunDiceTypes(config: ThrowConfig): string {
+    const parts = DIE_TYPES.flatMap((dieType) => {
+      const count = config[dieType];
+      return count > 0 ? [`${count}${dieType}`] : [];
+    });
+
+    return parts.join(' + ');
   }
 
   private translateThrowValidationError(error: ThrowValidationError): string {

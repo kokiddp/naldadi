@@ -114,7 +114,7 @@ export const IT_DICTIONARY: Dictionary = {
   'analysis.saved.load': 'Reidrata',
   'analysis.saved.delete': 'Elimina',
   'analysis.saved.clear': 'Cancella Tutto',
-  'analysis.saved.itemTitle': '{{iterations}} lanci, {{totalDice}} dadi - {{date}}',
+  'analysis.saved.itemTitle': '{{iterations}} lanci, {{totalDice}} dadi ({{diceTypes}}) - {{date}}',
   'analysis.saved.itemSummary': 'Intervallo {{min}}-{{max}}, media {{mean}}, dev. std {{stdDev}}',
   'analysis.saved.status.loaded': 'Analisi salvata caricata da {{date}}.',
 

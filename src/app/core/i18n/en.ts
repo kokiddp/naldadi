@@ -114,7 +114,7 @@ export const EN_DICTIONARY: Dictionary = {
   'analysis.saved.load': 'Rehydrate',
   'analysis.saved.delete': 'Delete',
   'analysis.saved.clear': 'Clear All',
-  'analysis.saved.itemTitle': '{{iterations}} runs, {{totalDice}} dice - {{date}}',
+  'analysis.saved.itemTitle': '{{iterations}} runs, {{totalDice}} dice ({{diceTypes}}) - {{date}}',
   'analysis.saved.itemSummary': 'Range {{min}}-{{max}}, mean {{mean}}, std dev {{stdDev}}',
   'analysis.saved.status.loaded': 'Loaded saved analysis from {{date}}.',
 

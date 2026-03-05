@@ -10,6 +10,7 @@ export interface DistributionPoint {
 
 export interface SimulationStats {
   readonly iterations: number;
+  readonly totalDice: number;
   readonly min: number;
   readonly max: number;
   readonly range: number;
@@ -36,6 +37,11 @@ export interface SimulationStats {
   readonly theoreticalMean: number;
   readonly theoreticalStdDev: number;
   readonly meanDelta: number;
+  readonly exactMatchCounts: ReadonlyArray<{
+    readonly matchSize: number;
+    readonly count: number;
+    readonly probability: number;
+  }>;
 }
 
 export interface SimulationResult {
@@ -67,6 +73,9 @@ export class SimulationCancelledError extends Error {
 
 interface SimulationAccumulator {
   readonly histogram: Map<number, number>;
+  readonly exactMatchCounts: number[];
+  readonly valueCounts: Uint16Array;
+  readonly touchedValueIndexes: number[];
   min: number;
   max: number;
   sum: number;
@@ -106,6 +115,9 @@ function createDiceGroups(config: ThrowConfig): { normalizedConfig: ThrowConfig;
 function createAccumulator(): SimulationAccumulator {
   return {
     histogram: new Map<number, number>(),
+    exactMatchCounts: [],
+    valueCounts: new Uint16Array(21),
+    touchedValueIndexes: [],
     min: Number.POSITIVE_INFINITY,
     max: Number.NEGATIVE_INFINITY,
     sum: 0,
@@ -121,12 +133,35 @@ function runIterationBatch(
 ): void {
   for (let simulationIndex = 0; simulationIndex < batchIterations; simulationIndex += 1) {
     let total = 0;
+    let maxExactMatch = 1;
 
     for (const group of diceGroups) {
       for (let dieIndex = 0; dieIndex < group.count; dieIndex += 1) {
-        total += Math.floor(rng() * group.sides) + 1;
+        const value = Math.floor(rng() * group.sides) + 1;
+        total += value;
+
+        const previousCount = accumulator.valueCounts[value] ?? 0;
+        if (previousCount === 0) {
+          accumulator.touchedValueIndexes.push(value);
+        }
+
+        const nextCount = previousCount + 1;
+        accumulator.valueCounts[value] = nextCount;
+        if (nextCount > maxExactMatch) {
+          maxExactMatch = nextCount;
+        }
       }
     }
+
+    if (maxExactMatch >= 2) {
+      accumulator.exactMatchCounts[maxExactMatch] =
+        (accumulator.exactMatchCounts[maxExactMatch] ?? 0) + 1;
+    }
+
+    for (const valueIndex of accumulator.touchedValueIndexes) {
+      accumulator.valueCounts[valueIndex] = 0;
+    }
+    accumulator.touchedValueIndexes.length = 0;
 
     accumulator.histogram.set(total, (accumulator.histogram.get(total) ?? 0) + 1);
     accumulator.min = Math.min(accumulator.min, total);
@@ -185,6 +220,7 @@ function buildSimulationResult(
   iterations: number,
   durationMs: number,
 ): SimulationResult {
+  const totalDice = diceGroups.reduce((sum, group) => sum + group.count, 0);
   const mean = accumulator.sum / iterations;
   const variance = Math.max(0, accumulator.sumSquares / iterations - mean * mean);
   const stdDev = Math.sqrt(variance);
@@ -233,11 +269,22 @@ function buildSimulationResult(
   const p99 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.99);
 
   const theoretical = computeTheoreticalStats(diceGroups);
+  const exactMatchCounts = Array.from({ length: Math.max(0, totalDice - 1) }, (_, index) => {
+    const matchSize = index + 2;
+    const count = accumulator.exactMatchCounts[matchSize] ?? 0;
+
+    return {
+      matchSize,
+      count,
+      probability: count / iterations,
+    };
+  });
 
   return {
     config: normalizedConfig,
     stats: {
       iterations,
+      totalDice,
       min: Number.isFinite(accumulator.min) ? accumulator.min : 0,
       max: Number.isFinite(accumulator.max) ? accumulator.max : 0,
       range: Number.isFinite(accumulator.min) && Number.isFinite(accumulator.max)
@@ -266,6 +313,7 @@ function buildSimulationResult(
       theoreticalMean: theoretical.mean,
       theoreticalStdDev: theoretical.stdDev,
       meanDelta: mean - theoretical.mean,
+      exactMatchCounts,
     },
     distribution,
   };

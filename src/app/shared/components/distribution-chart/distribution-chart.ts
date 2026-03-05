@@ -27,7 +27,7 @@ export class DistributionChart {
   title = '';
 
   @Input()
-  mode: 'histogram' | 'cdf' = 'histogram';
+  mode: 'histogram' | 'cdf' | 'pmf' | 'tail' = 'histogram';
 
   @Input()
   meanMarker: number | null = null;
@@ -38,7 +38,7 @@ export class DistributionChart {
   protected readonly viewWidth = 720;
   protected readonly viewHeight = 220;
   private readonly maxHistogramBars = 100;
-  private readonly maxCdfPoints = 700;
+  private readonly maxLinePoints = 700;
   protected tooltipVisible = false;
   protected tooltipText = '';
   protected tooltipLeft = 0;
@@ -50,9 +50,10 @@ export class DistributionChart {
   });
   private histogramCacheKey: DistributionPoint[] | null = null;
   private histogramCache: HistogramPoint[] = [];
-  private sampledCdfCacheKey: DistributionPoint[] | null = null;
-  private sampledCdfCache: DistributionPoint[] = [];
+  private sampledLineCacheKey: DistributionPoint[] | null = null;
+  private sampledLineCache: DistributionPoint[] = [];
   private linePathCacheKey: DistributionPoint[] | null = null;
+  private linePathCacheMode: 'cdf' | 'pmf' | 'tail' | null = null;
   private linePathCache = '';
   private maxFrequencyCacheKey: HistogramPoint[] | null = null;
   private maxFrequencyCache = 1;
@@ -102,18 +103,18 @@ export class DistributionChart {
     return this.histogramCache;
   }
 
-  protected get sampledCdfPoints(): DistributionPoint[] {
-    if (this.sampledCdfCacheKey === this.points) {
-      return this.sampledCdfCache;
+  protected get sampledLinePoints(): DistributionPoint[] {
+    if (this.sampledLineCacheKey === this.points) {
+      return this.sampledLineCache;
     }
 
-    if (this.points.length <= this.maxCdfPoints) {
-      this.sampledCdfCache = this.points;
-      this.sampledCdfCacheKey = this.points;
-      return this.sampledCdfCache;
+    if (this.points.length <= this.maxLinePoints) {
+      this.sampledLineCache = this.points;
+      this.sampledLineCacheKey = this.points;
+      return this.sampledLineCache;
     }
 
-    const step = Math.ceil(this.points.length / this.maxCdfPoints);
+    const step = Math.ceil(this.points.length / this.maxLinePoints);
     const sampled: DistributionPoint[] = [];
 
     for (let index = 0; index < this.points.length; index += step) {
@@ -125,35 +126,55 @@ export class DistributionChart {
       sampled.push(lastPoint);
     }
 
-    this.sampledCdfCache = sampled;
-    this.sampledCdfCacheKey = this.points;
-    return this.sampledCdfCache;
+    this.sampledLineCache = sampled;
+    this.sampledLineCacheKey = this.points;
+    return this.sampledLineCache;
   }
 
   protected get linePath(): string {
-    const sampled = this.sampledCdfPoints;
+    const sampled = this.sampledLinePoints;
     if (sampled.length === 0) {
       return '';
     }
 
-    if (this.linePathCacheKey === sampled) {
+    if (this.mode !== 'cdf' && this.mode !== 'pmf' && this.mode !== 'tail') {
+      return '';
+    }
+
+    if (this.linePathCacheKey === sampled && this.linePathCacheMode === this.mode) {
       return this.linePathCache;
     }
 
     const maxTotal = sampled[sampled.length - 1]?.total ?? 1;
     const minTotal = sampled[0]?.total ?? 0;
     const xRange = Math.max(1, maxTotal - minTotal);
+    const maxPmfProbability =
+      this.mode === 'pmf' ? Math.max(1e-9, ...sampled.map((point) => point.probability)) : 1;
 
     const pathParts: string[] = [];
     sampled.forEach((point, index) => {
       const x = ((point.total - minTotal) / xRange) * this.viewWidth;
-      const y = (1 - point.cumulativeProbability) * this.viewHeight;
+      const yValue = this.getLineValue(point, maxPmfProbability);
+      const y = (1 - yValue) * this.viewHeight;
       pathParts.push(`${index === 0 ? 'M' : 'L'} ${x} ${y}`);
     });
 
     this.linePathCache = pathParts.join(' ');
     this.linePathCacheKey = sampled;
+    this.linePathCacheMode = this.mode;
     return this.linePathCache;
+  }
+
+  protected get lineClass(): string {
+    if (this.mode === 'pmf') {
+      return 'pmf-line';
+    }
+
+    if (this.mode === 'tail') {
+      return 'tail-line';
+    }
+
+    return 'cdf-line';
   }
 
   protected get maxFrequency(): number {
@@ -248,6 +269,19 @@ export class DistributionChart {
 
   protected t(key: string, params?: Record<string, string | number>): string {
     return this.i18n.t(key, params);
+  }
+
+  private getLineValue(point: DistributionPoint, maxPmfProbability: number): number {
+    if (this.mode === 'pmf') {
+      return Math.min(1, Math.max(0, point.probability / maxPmfProbability));
+    }
+
+    if (this.mode === 'tail') {
+      const lessThanCurrent = point.cumulativeProbability - point.probability;
+      return Math.min(1, Math.max(0, 1 - lessThanCurrent));
+    }
+
+    return Math.min(1, Math.max(0, point.cumulativeProbability));
   }
 
   private formatCompactNumber(value: number): string {

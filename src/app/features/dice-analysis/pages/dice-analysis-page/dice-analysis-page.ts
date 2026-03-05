@@ -34,6 +34,19 @@ interface MultiplicityGroup {
   readonly totalDice: number;
 }
 
+interface ExactMatchStat {
+  readonly matchSize: number;
+  readonly label: string;
+  readonly count: number;
+  readonly probability: number;
+}
+
+interface ProbabilityBucketStat {
+  readonly fromPercent: number;
+  readonly toPercent: number;
+  readonly points: ReadonlyArray<DistributionPoint>;
+}
+
 @Component({
   selector: 'app-dice-analysis-page',
   imports: [CommonModule, FormsModule, ThrowComposer, DistributionChart],
@@ -112,6 +125,54 @@ export class DiceAnalysisPage {
     return [...sim.distribution]
       .sort((a, b) => b.frequency - a.frequency || a.total - b.total)
       .slice(0, 12);
+  });
+
+  protected readonly exactMatchStats = computed<ExactMatchStat[]>(() => {
+    const sim = this.simulation();
+    if (sim === null || sim.stats.totalDice <= 1) {
+      return [];
+    }
+
+    return sim.stats.exactMatchCounts.map((entry) => ({
+      matchSize: entry.matchSize,
+      label: this.multiplicityLabel(entry.matchSize),
+      count: entry.count,
+      probability: entry.probability,
+    }));
+  });
+
+  protected readonly probabilityBuckets = computed<ProbabilityBucketStat[]>(() => {
+    const sim = this.simulation();
+    if (sim === null || sim.distribution.length === 0) {
+      return [];
+    }
+
+    const rows: ProbabilityBucketStat[] = [];
+
+    for (let toPercent = 5; toPercent <= 100; toPercent += 5) {
+      const fromPercent = toPercent - 5;
+      const points = sim.distribution.filter((point) => {
+        const probabilityPercent = point.probability * 100;
+
+        if (fromPercent === 0) {
+          return probabilityPercent < toPercent;
+        }
+
+        if (toPercent === 100) {
+          return probabilityPercent >= fromPercent && probabilityPercent <= toPercent;
+        }
+
+        return probabilityPercent >= fromPercent && probabilityPercent < toPercent;
+      });
+
+      rows.push({
+        fromPercent,
+        toPercent,
+        points,
+      });
+    }
+
+    return rows.filter((row) => row.points.length > 0);
   });
 
   protected readonly centralBandProbability = computed(() => {
@@ -245,6 +306,32 @@ export class DiceAnalysisPage {
 
   protected trackByMultiplicity(_: number, group: MultiplicityGroup): number {
     return group.size;
+  }
+
+  protected trackByMatchSize(_: number, entry: ExactMatchStat): number {
+    return entry.matchSize;
+  }
+
+  protected trackByProbabilityBucket(_: number, row: ProbabilityBucketStat): number {
+    return row.toPercent;
+  }
+
+  protected formatProbabilityBucketLabel(row: ProbabilityBucketStat): string {
+    if (row.fromPercent === 0) {
+      return this.i18n.t('analysis.probabilityBuckets.label.lessThan', { to: row.toPercent });
+    }
+
+    if (row.toPercent === 100) {
+      return this.i18n.t('analysis.probabilityBuckets.label.finalRange', {
+        from: row.fromPercent,
+        to: row.toPercent,
+      });
+    }
+
+    return this.i18n.t('analysis.probabilityBuckets.label.range', {
+      from: row.fromPercent,
+      to: row.toPercent,
+    });
   }
 
   private pickChunkSize(iterationCount: number): number {

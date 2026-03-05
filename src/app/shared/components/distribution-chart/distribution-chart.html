@@ -45,9 +45,9 @@
     </p>
   </div>
 
-  <div class="line-chart" *ngIf="mode === 'cdf'">
+  <div class="line-chart" *ngIf="mode !== 'histogram'">
     <svg [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight" preserveAspectRatio="none">
-      <path class="cdf-line" [attr.d]="linePath"></path>
+      <path [attr.class]="lineClass" [attr.d]="linePath"></path>
     </svg>
   </div>
 </section>

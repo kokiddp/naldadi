@@ -38,6 +38,52 @@ p {
 	margin-top: 1rem;
 }
 
+.stats-group {
+	margin-top: 1rem;
+}
+
+.stats-group > h3 {
+	margin: 0;
+}
+
+.stats-group .stats-grid {
+	margin-top: 0.65rem;
+}
+
+.match-stats {
+	background: rgba(20, 48, 70, 0.08);
+	border-radius: 12px;
+	margin-top: 1rem;
+	padding: 0.9rem;
+}
+
+.match-stats h3 {
+	margin: 0;
+}
+
+.match-stats p {
+	margin: 0.35rem 0 0;
+}
+
+.match-stats ul {
+	display: grid;
+	gap: 0.4rem;
+	list-style: none;
+	margin: 0.7rem 0 0;
+	padding: 0;
+}
+
+.match-stats li {
+	background: rgba(20, 48, 70, 0.95);
+	border-radius: 10px;
+	color: #eff5fa;
+	padding: 0.55rem 0.7rem;
+}
+
+.empty-note {
+	font-style: italic;
+}
+
 .composition {
 	margin-top: 1rem;
 }
@@ -216,6 +262,59 @@ button:disabled {
 
 .outcomes {
 	margin-top: 1rem;
+}
+
+.percentile-bands {
+	margin-top: 1rem;
+}
+
+.percentile-bands h3 {
+	margin: 0;
+}
+
+.percentile-bands p {
+	margin: 0.35rem 0 0;
+}
+
+.percentile-bands ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.bucket-grid {
+	display: grid;
+	gap: 0.5rem;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+	margin-top: 0.7rem;
+}
+
+.bucket-card {
+	background: rgba(20, 48, 70, 0.08);
+	border-radius: 10px;
+	color: #294357;
+	cursor: default;
+	display: grid;
+	gap: 0.4rem;
+	padding: 0.6rem;
+}
+
+.bucket-card h4 {
+	color: #1c4f6f;
+	margin: 0;
+}
+
+.bucket-card ul {
+	display: grid;
+	gap: 0.2rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.bucket-card li {
+	color: #36566d;
+	font-size: 0.92rem;
 }
 
 .outcomes h3 {

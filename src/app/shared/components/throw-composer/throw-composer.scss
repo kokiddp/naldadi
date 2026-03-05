@@ -2,6 +2,7 @@
   background: rgba(20, 48, 70, 0.95);
   border-radius: 14px;
   color: #f0f6fb;
+  min-width: 0;
   padding: 0.95rem;
 }
 
@@ -29,7 +30,9 @@ h3 {
 .controls {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
+  justify-content: flex-end;
 }
 
 button {
@@ -58,4 +61,21 @@ input {
 .error {
   color: #ffd5bf;
   margin: 0.7rem 0 0;
+}
+
+@media (max-width: 460px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    justify-content: space-between;
+  }
+
+  input {
+    flex: 1 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    width: auto;
+  }
 }

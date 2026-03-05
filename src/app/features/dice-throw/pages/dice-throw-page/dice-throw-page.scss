@@ -4,6 +4,7 @@
 	border-radius: 18px;
 	box-shadow: 0 10px 28px rgba(22, 42, 58, 0.08);
 	padding: 1.2rem;
+	min-width: 0;
 }
 
 h2 {
@@ -17,7 +18,7 @@ p {
 .layout {
 	display: grid;
 	gap: 1rem;
-	grid-template-columns: minmax(240px, 320px) 1fr;
+	grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
 	margin-top: 1rem;
 }
 
@@ -60,6 +61,7 @@ button:disabled {
 .result ul {
 	margin: 0.5rem 0 0;
 	padding-left: 1rem;
+	word-break: break-word;
 }
 
 .total {
@@ -86,10 +88,21 @@ button:disabled {
 	display: grid;
 	gap: 0.25rem;
 	padding: 0.65rem;
+	word-break: break-word;
 }
 
 @media (max-width: 800px) {
 	.layout {
 		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 460px) {
+	.panel {
+		padding: 0.85rem;
+	}
+
+	button {
+		width: 100%;
 	}
 }

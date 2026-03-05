@@ -5,6 +5,7 @@
 
 .app-shell {
 	min-height: 100vh;
+	overflow-x: clip;
 	background:
 		radial-gradient(circle at 15% 20%, rgba(23, 141, 194, 0.2), transparent 40%),
 		radial-gradient(circle at 80% 10%, rgba(255, 153, 102, 0.2), transparent 35%),
@@ -62,9 +63,14 @@ h1 {
 .view {
 	margin: 1.2rem auto 0;
 	max-width: 1000px;
+	min-width: 0;
 }
 
 @media (max-width: 760px) {
+	.app-shell {
+		padding: 0.9rem;
+	}
+
 	.app-header {
 		align-items: start;
 		flex-direction: column;
@@ -75,7 +81,18 @@ h1 {
 	}
 
 	.main-nav a {
+		padding: 0.58rem 0.8rem;
 		text-align: center;
 		width: 100%;
+	}
+}
+
+@media (max-width: 420px) {
+	.app-shell {
+		padding: 0.65rem;
+	}
+
+	h1 {
+		font-size: 1.3rem;
 	}
 }

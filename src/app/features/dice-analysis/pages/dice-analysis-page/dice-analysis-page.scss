@@ -264,59 +264,6 @@ button:disabled {
 	margin-top: 1rem;
 }
 
-.percentile-bands {
-	margin-top: 1rem;
-}
-
-.percentile-bands h3 {
-	margin: 0;
-}
-
-.percentile-bands p {
-	margin: 0.35rem 0 0;
-}
-
-.percentile-bands ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.bucket-grid {
-	display: grid;
-	gap: 0.5rem;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-	margin-top: 0.7rem;
-}
-
-.bucket-card {
-	background: rgba(20, 48, 70, 0.08);
-	border-radius: 10px;
-	color: #294357;
-	cursor: default;
-	display: grid;
-	gap: 0.4rem;
-	padding: 0.6rem;
-}
-
-.bucket-card h4 {
-	color: #1c4f6f;
-	margin: 0;
-}
-
-.bucket-card ul {
-	display: grid;
-	gap: 0.2rem;
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.bucket-card li {
-	color: #36566d;
-	font-size: 0.92rem;
-}
-
 .outcomes h3 {
 	margin: 0;
 }
@@ -342,95 +289,9 @@ button:disabled {
 	font-size: 0.92rem;
 }
 
-.saved-runs {
-	margin-top: 1rem;
-}
-
-.saved-runs-header {
-	align-items: center;
-	display: flex;
-	gap: 0.8rem;
-	justify-content: space-between;
-}
-
-.saved-runs h3 {
-	margin: 0;
-}
-
-.saved-runs ul {
-	display: grid;
-	gap: 0.5rem;
-	list-style: none;
-	margin: 0.65rem 0 0;
-	padding: 0;
-}
-
-.saved-runs li {
-	align-items: start;
-	background: rgba(20, 48, 70, 0.08);
-	border-radius: 10px;
-	display: flex;
-	gap: 0.8rem;
-	justify-content: space-between;
-	padding: 0.65rem;
-}
-
-.saved-runs-meta {
-	display: grid;
-	gap: 0.25rem;
-	word-break: break-word;
-}
-
-.saved-runs-meta span {
-	color: #36566d;
-	font-size: 0.92rem;
-}
-
-.saved-runs-load-btn {
-	background: #17374f;
-	margin-top: 0;
-	padding: 0.45rem 0.75rem;
-	white-space: nowrap;
-}
-
-.saved-runs-delete-btn,
-.saved-runs-clear-btn {
-	background: #7a2e1b;
-	margin-top: 0;
-	padding: 0.45rem 0.75rem;
-	white-space: nowrap;
-}
-
-.saved-runs-actions {
-	display: flex;
-	gap: 0.45rem;
-}
-
-.saved-runs-pagination {
-	align-items: center;
-	display: flex;
-	gap: 0.6rem;
-	justify-content: center;
-	margin-top: 0.6rem;
-}
-
-.saved-runs-pagination span {
-	color: #294357;
-	font-size: 0.92rem;
-}
-
 @media (max-width: 800px) {
 	.layout {
 		grid-template-columns: 1fr;
-	}
-
-	.saved-runs li {
-		flex-direction: column;
-	}
-
-	.saved-runs-header {
-		align-items: stretch;
-		flex-direction: column;
 	}
 }
 
@@ -444,8 +305,4 @@ button:disabled {
 		gap: 0.15rem;
 	}
 
-	.saved-runs-actions,
-	.saved-runs-pagination {
-		flex-wrap: wrap;
-	}
 }

@@ -19,6 +19,14 @@ import {
 } from '../../../../core/throw.validators';
 import { DistributionChart } from '../../../../shared/components/distribution-chart/distribution-chart';
 import { ThrowComposer } from '../../../../shared/components/throw-composer/throw-composer';
+import {
+  ProbabilityBuckets,
+  type ProbabilityBucketItem,
+} from '../../components/probability-buckets/probability-buckets';
+import {
+  SavedAnalysisRuns,
+  type SavedAnalysisRunView,
+} from '../../components/saved-analysis-runs/saved-analysis-runs';
 
 interface CompositionRow {
   readonly dieType: DieType;
@@ -41,12 +49,6 @@ interface ExactMatchStat {
   readonly probability: number;
 }
 
-interface ProbabilityBucketStat {
-  readonly fromPercent: number;
-  readonly toPercent: number;
-  readonly points: ReadonlyArray<DistributionPoint>;
-}
-
 interface SavedAnalysisItem {
   readonly id: number;
   readonly createdAt: number;
@@ -55,7 +57,7 @@ interface SavedAnalysisItem {
 
 @Component({
   selector: 'app-dice-analysis-page',
-  imports: [CommonModule, FormsModule, ThrowComposer, DistributionChart],
+  imports: [CommonModule, FormsModule, ThrowComposer, DistributionChart, ProbabilityBuckets, SavedAnalysisRuns],
   templateUrl: './dice-analysis-page.html',
   styleUrl: './dice-analysis-page.scss',
 })
@@ -70,6 +72,7 @@ export class DiceAnalysisPage {
   protected readonly simulation = signal<SimulationResult | null>(null);
   protected readonly savedRuns = signal<SavedAnalysisItem[]>(this.loadSavedRuns());
   protected readonly savedRunsPage = signal(1);
+  protected readonly activeSavedRunId = signal<number | null>(null);
   protected readonly isRunning = signal(false);
   protected readonly statusMessage = signal<string | null>(null);
   protected readonly progressPercent = signal(0);
@@ -96,6 +99,13 @@ export class DiceAnalysisPage {
     const start = (page - 1) * this.pageSize;
     return this.savedRuns().slice(start, start + this.pageSize);
   });
+  protected readonly pagedSavedRunViews = computed<SavedAnalysisRunView[]>(() =>
+    this.pagedSavedRuns().map((item) => ({
+      id: item.id,
+      title: this.formatSavedRunTitle(item),
+      summary: this.formatSavedRunSummary(item),
+    })),
+  );
   protected readonly canGoToPreviousSavedRunsPage = computed(() => this.savedRunsPage() > 1);
   protected readonly canGoToNextSavedRunsPage = computed(
     () => this.savedRunsPage() < this.totalSavedRunsPages(),
@@ -164,13 +174,13 @@ export class DiceAnalysisPage {
     }));
   });
 
-  protected readonly probabilityBuckets = computed<ProbabilityBucketStat[]>(() => {
+  protected readonly probabilityBuckets = computed<ProbabilityBucketItem[]>(() => {
     const sim = this.simulation();
     if (sim === null || sim.distribution.length === 0) {
       return [];
     }
 
-    const rows: ProbabilityBucketStat[] = [];
+    const rows: ProbabilityBucketItem[] = [];
 
     for (let toPercent = 5; toPercent <= 100; toPercent += 5) {
       const fromPercent = toPercent - 5;
@@ -336,14 +346,6 @@ export class DiceAnalysisPage {
     return entry.matchSize;
   }
 
-  protected trackByProbabilityBucket(_: number, row: ProbabilityBucketStat): number {
-    return row.toPercent;
-  }
-
-  protected trackBySavedRun(_: number, item: SavedAnalysisItem): number {
-    return item.id;
-  }
-
   protected rehydrateSavedRun(item: SavedAnalysisItem): void {
     if (this.isRunning()) {
       return;
@@ -352,11 +354,19 @@ export class DiceAnalysisPage {
     this.config.set(item.result.config);
     this.iterations.set(item.result.stats.iterations);
     this.simulation.set(item.result);
+    this.activeSavedRunId.set(item.id);
     this.statusMessage.set(
       this.i18n.t('analysis.saved.status.loaded', {
         date: new Date(item.createdAt).toLocaleString(),
       }),
     );
+  }
+
+  protected loadSavedRun(itemId: number): void {
+    const item = this.savedRuns().find((entry) => entry.id === itemId);
+    if (item !== undefined) {
+      this.rehydrateSavedRun(item);
+    }
   }
 
   protected formatSavedRunTitle(item: SavedAnalysisItem): string {
@@ -382,6 +392,9 @@ export class DiceAnalysisPage {
       this.persistSavedRuns(next);
       return next;
     });
+    if (this.activeSavedRunId() === itemId) {
+      this.activeSavedRunId.set(null);
+    }
     this.clampSavedRunsPage();
   }
 
@@ -389,6 +402,7 @@ export class DiceAnalysisPage {
     this.savedRuns.set([]);
     this.persistSavedRuns([]);
     this.savedRunsPage.set(1);
+    this.activeSavedRunId.set(null);
   }
 
   protected previousSavedRunsPage(): void {
@@ -405,24 +419,6 @@ export class DiceAnalysisPage {
     }
 
     this.savedRunsPage.update((current) => Math.min(this.totalSavedRunsPages(), current + 1));
-  }
-
-  protected formatProbabilityBucketLabel(row: ProbabilityBucketStat): string {
-    if (row.fromPercent === 0) {
-      return this.i18n.t('analysis.probabilityBuckets.label.lessThan', { to: row.toPercent });
-    }
-
-    if (row.toPercent === 100) {
-      return this.i18n.t('analysis.probabilityBuckets.label.finalRange', {
-        from: row.fromPercent,
-        to: row.toPercent,
-      });
-    }
-
-    return this.i18n.t('analysis.probabilityBuckets.label.range', {
-      from: row.fromPercent,
-      to: row.toPercent,
-    });
   }
 
   private pickChunkSize(iterationCount: number): number {
@@ -449,6 +445,7 @@ export class DiceAnalysisPage {
       this.persistSavedRuns(next);
       return next;
     });
+    this.activeSavedRunId.set(item.id);
     this.savedRunsPage.set(1);
   }
 

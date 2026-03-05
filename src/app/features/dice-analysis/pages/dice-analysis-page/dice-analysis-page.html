@@ -38,6 +38,19 @@
 		</div>
 	</div>
 
+  <app-saved-analysis-runs
+		[items]="pagedSavedRunViews()"
+		[activeItemId]="activeSavedRunId()"
+		[currentPage]="savedRunsPage()"
+		[totalPages]="totalSavedRunsPages()"
+		[disabled]="isRunning()"
+		(load)="loadSavedRun($event)"
+		(delete)="deleteSavedRun($event)"
+		(clear)="clearSavedRuns()"
+		(previousPage)="previousSavedRunsPage()"
+		(nextPage)="nextSavedRunsPage()"
+	/>
+
 	<section class="composition" *ngIf="activeCompositionRows().length > 0">
 		<h3>{{ t('analysis.compositionTitle') }}</h3>
 		<div class="composition-grid">
@@ -194,20 +207,7 @@
 		</div>
 	</section>
 
-  	<section class="percentile-bands" *ngIf="!isRunning() && probabilityBuckets().length > 0">
-		<h3>{{ t('analysis.probabilityBuckets.title') }}</h3>
-		<p>{{ t('analysis.probabilityBuckets.subtitle') }}</p>
-		<div class="bucket-grid">
-			<article class="bucket-card" *ngFor="let bucket of probabilityBuckets(); trackBy: trackByProbabilityBucket">
-				<h4>{{ formatProbabilityBucketLabel(bucket) }}</h4>
-				<ul>
-					<li *ngFor="let point of bucket.points; trackBy: trackByTotal">
-						{{ t('analysis.probabilityBuckets.entry', { total: point.total, probability: formatPercent(point.probability) }) }}
-					</li>
-				</ul>
-			</article>
-		</div>
-	</section>
+	<app-probability-buckets *ngIf="!isRunning()" [buckets]="probabilityBuckets()" />
 
 	<section class="outcomes" *ngIf="!isRunning() && simulation() !== null">
 		<h3>{{ t('analysis.outcomes.title') }}</h3>
@@ -230,40 +230,5 @@
 		<app-distribution-chart [points]="result.distribution" [title]="t('analysis.cdfTitle')" mode="cdf" />
 		<app-distribution-chart [points]="result.distribution" [title]="t('analysis.pmfTitle')" mode="pmf" />
 		<app-distribution-chart [points]="result.distribution" [title]="t('analysis.tailTitle')" mode="tail" />
-	</section>
-
-	<section class="saved-runs" *ngIf="savedRuns().length > 0">
-		<div class="saved-runs-header">
-			<h3>{{ t('analysis.saved.title') }}</h3>
-			<button type="button" class="saved-runs-clear-btn" (click)="clearSavedRuns()" [disabled]="isRunning()">
-				{{ t('analysis.saved.clear') }}
-			</button>
-		</div>
-		<ul>
-			<li *ngFor="let item of pagedSavedRuns(); trackBy: trackBySavedRun">
-				<div class="saved-runs-meta">
-					<strong>{{ formatSavedRunTitle(item) }}</strong>
-					<span>{{ formatSavedRunSummary(item) }}</span>
-				</div>
-				<div class="saved-runs-actions">
-					<button type="button" class="saved-runs-load-btn" (click)="rehydrateSavedRun(item)" [disabled]="isRunning()">
-						{{ t('analysis.saved.load') }}
-					</button>
-					<button type="button" class="saved-runs-delete-btn" (click)="deleteSavedRun(item.id)" [disabled]="isRunning()">
-						{{ t('analysis.saved.delete') }}
-					</button>
-				</div>
-			</li>
-		</ul>
-
-		<div class="saved-runs-pagination" *ngIf="totalSavedRunsPages() > 1">
-			<button type="button" (click)="previousSavedRunsPage()" [disabled]="!canGoToPreviousSavedRunsPage() || isRunning()">
-				{{ t('pagination.previous') }}
-			</button>
-			<span>{{ t('pagination.pageInfo', { page: savedRunsPage(), totalPages: totalSavedRunsPages() }) }}</span>
-			<button type="button" (click)="nextSavedRunsPage()" [disabled]="!canGoToNextSavedRunsPage() || isRunning()">
-				{{ t('pagination.next') }}
-			</button>
-		</div>
 	</section>
 </section>

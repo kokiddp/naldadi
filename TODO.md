@@ -16,8 +16,8 @@
 
 - [x] Build throw composer component (add/remove die types and counts)
 - [x] Implement one-off roll engine
-- [ ] Display per-die results and total sum
-- [ ] Add throw history list (latest N throws)
+- [x] Display per-die results and total sum
+- [x] Add throw history list (latest N throws)
 
 ## Dice Analysis Feature
 
@@ -33,3 +33,10 @@
 - [ ] Unit tests for stats calculations
 - [ ] Add E2E smoke test for both routes
 - [ ] Add lint/format check to CI pipeline
+
+## Internationalization
+
+- [x] Make UI strings translatable via runtime i18n service
+- [x] Add Italian translations
+- [x] Auto-detect language from browser locale
+- [ ] Add translation coverage tests/checks for missing keys

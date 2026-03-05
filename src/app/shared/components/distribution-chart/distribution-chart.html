@@ -3,10 +3,10 @@
 
   <div class="histogram-wrap" *ngIf="mode === 'histogram'">
     <div class="marker mean-marker" *ngIf="meanMarker !== null" [style.left.%]="markerLeft(meanMarker)">
-      <span>Mean {{ meanMarker.toFixed(2) }}</span>
+      <span>{{ t('chart.marker.mean', { value: meanMarker.toFixed(2) }) }}</span>
     </div>
     <div class="marker median-marker" *ngIf="medianMarker !== null" [style.left.%]="markerLeft(medianMarker)">
-      <span>Median {{ medianMarker.toFixed(2) }}</span>
+      <span>{{ t('chart.marker.median', { value: medianMarker.toFixed(2) }) }}</span>
     </div>
 
     <div
@@ -41,7 +41,7 @@
     </div>
 
     <p class="chart-note" *ngIf="isBinnedHistogram">
-      Histogram is binned for readability and performance. Hover bars for exact percentages.
+      {{ t('chart.note.binned') }}
     </p>
   </div>
 
@@ -55,6 +55,6 @@
 <ng-template #noData>
   <section class="chart-wrap">
     <h3>{{ title }}</h3>
-    <p class="empty">No data yet.</p>
+    <p class="empty">{{ t('chart.noData') }}</p>
   </section>
 </ng-template>

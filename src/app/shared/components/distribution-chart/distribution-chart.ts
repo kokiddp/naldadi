@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 
+import { I18nService } from '../../../core/i18n.service';
 import { type DistributionPoint } from '../../../core/simulation.engine';
 
 interface HistogramPoint {
@@ -18,6 +19,7 @@ interface HistogramPoint {
   styleUrl: './distribution-chart.scss',
 })
 export class DistributionChart {
+  private readonly i18n = inject(I18nService);
   @Input({ required: true })
   points: DistributionPoint[] = [];
 
@@ -190,7 +192,11 @@ export class DistributionChart {
   }
 
   protected getHistogramTooltip(point: HistogramPoint): string {
-    return `Total ${point.label}: ${point.frequency.toLocaleString()} results (${this.formatPercent(point.probability)})`;
+    return this.i18n.t('chart.tooltip.histogramPoint', {
+      label: point.label,
+      frequency: point.frequency.toLocaleString(),
+      probability: this.formatPercent(point.probability),
+    });
   }
 
   protected get isBinnedHistogram(): boolean {
@@ -238,6 +244,10 @@ export class DistributionChart {
 
   protected trackByHistogramKey(_: number, point: HistogramPoint): string {
     return point.key;
+  }
+
+  protected t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   private formatCompactNumber(value: number): string {

@@ -1,17 +1,17 @@
 <section class="panel">
-	<h2>Dice Throw</h2>
-	<p>Compose one throw and roll instantly.</p>
+	<h2>{{ t('throw.title') }}</h2>
+	<p>{{ t('throw.subtitle') }}</p>
 
 	<div class="layout">
 		<app-throw-composer [config]="config()" (configChange)="onConfigChange($event)" />
 
 		<div class="action-block">
-			<button type="button" (click)="roll()" [disabled]="!canRoll()">Roll Throw</button>
+			<button type="button" (click)="roll()" [disabled]="!canRoll()">{{ t('throw.roll') }}</button>
 			<p class="error" *ngIf="validationError() as error">{{ error }}</p>
 
 			<section class="result" *ngIf="result() as rollResult">
-				<h3>Latest Result</h3>
-				<p class="total">Total: {{ rollResult.total }}</p>
+				<h3>{{ t('throw.latestResult') }}</h3>
+				<p class="total">{{ t('throw.total') }}: {{ rollResult.total }}</p>
 				<ul>
 					<li *ngFor="let dieType of dieTypes">
 						<strong>{{ dieType }}:</strong>
@@ -23,10 +23,10 @@
 	</div>
 
 	<section class="history" *ngIf="history().length > 0">
-		<h3>Throw History</h3>
+		<h3>{{ t('throw.history') }}</h3>
 		<ul>
 			<li *ngFor="let item of history(); trackBy: trackByHistoryId">
-				<strong>Total {{ item.total }}</strong>
+				<strong>{{ t('throw.historyTotal', { total: item.total }) }}</strong>
 				<span>{{ item.summary }}</span>
 			</li>
 		</ul>

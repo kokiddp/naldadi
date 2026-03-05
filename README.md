@@ -18,6 +18,17 @@ NalDadi is an Angular app for simulating and analyzing dice throws.
 - SCSS
 - Vitest (via Angular CLI test setup)
 
+## Internationalization
+
+- Runtime i18n is implemented via `src/app/core/i18n.service.ts`.
+- Language is auto-selected from browser language (`navigator.languages` / `navigator.language`).
+- Currently supported languages:
+	- English (`en`)
+	- Italian (`it`)
+- Dictionaries are split by language:
+	- `src/app/core/i18n/en.ts`
+	- `src/app/core/i18n/it.ts`
+
 ## Quick Start
 
 1. Install dependencies:
@@ -47,6 +58,7 @@ npm start
 src/app/
 	app.html
 	app.routes.ts
+	core/i18n/
 	features/
 		dice-throw/pages/dice-throw-page/
 		dice-analysis/pages/dice-analysis-page/

@@ -2,12 +2,12 @@
   <header class="app-header">
     <div>
       <p class="kicker">NalDadi</p>
-      <h1>Dice Simulator and Analyzer</h1>
+      <h1>{{ t('app.title') }}</h1>
     </div>
 
-    <nav class="main-nav" aria-label="Main navigation">
-      <a routerLink="/dice-throw" routerLinkActive="active">Dice Throw</a>
-      <a routerLink="/dice-analysis" routerLinkActive="active">Dice Analysis</a>
+    <nav class="main-nav" [attr.aria-label]="t('app.nav.main')">
+      <a routerLink="/dice-throw" routerLinkActive="active">{{ t('app.nav.throw') }}</a>
+      <a routerLink="/dice-analysis" routerLinkActive="active">{{ t('app.nav.analysis') }}</a>
     </nav>
   </header>
 

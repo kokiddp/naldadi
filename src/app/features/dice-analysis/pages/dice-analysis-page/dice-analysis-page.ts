@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { DIE_TYPES, getDieSides, type DieType, type ThrowConfig, createEmptyThrowConfig } from '../../../../core/dice.model';
+import { I18nService } from '../../../../core/i18n.service';
 import {
   SimulationCancelledError,
   runSimulationProgressive,
@@ -11,6 +12,8 @@ import {
 } from '../../../../core/simulation.engine';
 import {
   getTotalDice,
+  type IterationValidationError,
+  type ThrowValidationError,
   validateIterations,
   validateThrowConfig,
 } from '../../../../core/throw.validators';
@@ -38,6 +41,7 @@ interface MultiplicityGroup {
   styleUrl: './dice-analysis-page.scss',
 })
 export class DiceAnalysisPage {
+  private readonly i18n = inject(I18nService);
   protected readonly dieTypes = DIE_TYPES;
   protected readonly config = signal<ThrowConfig>(createEmptyThrowConfig());
   protected readonly iterations = signal(10000);
@@ -47,45 +51,14 @@ export class DiceAnalysisPage {
   protected readonly progressPercent = signal(0);
   protected readonly completedIterations = signal(0);
   protected readonly cancelRequested = signal(false);
-  protected readonly statHelp = {
-    iterations: 'How many simulated throws were executed in this run.',
-    duration: 'How long the simulation took from start to finish in milliseconds.',
-    throughput: 'How many simulated throws were processed per second on your current device.',
-    minMax: 'The smallest and largest total values seen across all simulated throws.',
-    range: 'Difference between the maximum and minimum total (max minus min).',
-    mean: 'The average total value across all throws.',
-    theoreticalMean: 'The mathematically expected average total for the selected dice setup.',
-    meanDelta: 'How far the observed mean is from the theoretical mean.',
-    median: 'The middle total when all results are sorted from lowest to highest.',
-    mode: 'The most frequently occurring total.',
-    stdDev: 'Typical distance of results from the mean. Higher means more spread.',
-    theoreticalStdDev: 'The mathematically expected spread for this dice setup.',
-    variance: 'Spread measure equal to standard deviation squared.',
-    coeffVariation: 'Relative spread: standard deviation divided by mean, shown as a percentage.',
-    q1Q3: 'Q1 is the 25th percentile and Q3 is the 75th percentile of totals.',
-    iqr: 'Interquartile range (Q3 minus Q1), showing the width of the middle 50 percent.',
-    percentiles: 'P05, P95, and P99 are totals below which 5 percent, 95 percent, and 99 percent of outcomes fall.',
-    skewness: 'Shows if results lean left or right. Near zero means roughly symmetric.',
-    excessKurtosis: 'Shows tail heaviness vs a normal shape. Positive means heavier tails, negative means lighter tails.',
-    entropy: 'Information/uncertainty in the distribution. Higher entropy means outcomes are more spread out.',
-    uniqueTotals: 'How many distinct total values actually appeared in this simulation.',
-    withinSigma: 'Probability that totals fall within one standard deviation of the mean.',
-    belowAboveMean: 'Probability split for totals below the mean versus at or above the mean.',
-  } as const;
-  protected readonly multiplicityHelp = {
-    perDieType:
-      'Shows each selected die type and how many of that die are included in one throw (single, double, triple, etc.).',
-    combined:
-      'Groups the throw by multiplicity size. For example, how many die types are doubles, triples, and so on, plus combined dice count.',
-  } as const;
-
   protected readonly validationError = computed(() => {
-    const throwError = validateThrowConfig(this.config())[0] ?? null;
+    const throwError: ThrowValidationError | null = validateThrowConfig(this.config())[0] ?? null;
     if (throwError !== null) {
-      return throwError;
+      return this.translateThrowValidationError(throwError);
     }
 
-    return validateIterations(this.iterations());
+    const iterationError: IterationValidationError | null = validateIterations(this.iterations());
+    return iterationError === null ? null : this.translateIterationValidationError(iterationError);
   });
 
   protected readonly canRun = computed(
@@ -198,7 +171,7 @@ export class DiceAnalysisPage {
     this.simulation.set(null);
     this.progressPercent.set(0);
     this.completedIterations.set(0);
-    this.statusMessage.set('Simulation in progress...');
+    this.statusMessage.set(this.i18n.t('analysis.status.inProgress'));
 
     try {
       let lastProgressUpdateMs = 0;
@@ -224,14 +197,21 @@ export class DiceAnalysisPage {
       });
 
       this.simulation.set(nextSimulation);
-      this.statusMessage.set(`Simulation complete for ${nextSimulation.stats.iterations.toLocaleString()} runs.`);
+      this.statusMessage.set(
+        this.i18n.t('analysis.status.complete', {
+          iterations: nextSimulation.stats.iterations.toLocaleString(),
+        }),
+      );
     } catch (error: unknown) {
       if (error instanceof SimulationCancelledError) {
         this.statusMessage.set(
-          `Simulation cancelled at ${this.completedIterations().toLocaleString()} / ${iterationCount.toLocaleString()} runs.`,
+          this.i18n.t('analysis.status.cancelled', {
+            completed: this.completedIterations().toLocaleString(),
+            iterations: iterationCount.toLocaleString(),
+          }),
         );
       } else {
-        this.statusMessage.set('Simulation failed unexpectedly. Please try again.');
+        this.statusMessage.set(this.i18n.t('analysis.status.failed'));
       }
     } finally {
       this.isRunning.set(false);
@@ -244,7 +224,11 @@ export class DiceAnalysisPage {
     }
 
     this.cancelRequested.set(true);
-    this.statusMessage.set('Cancelling simulation...');
+    this.statusMessage.set(this.i18n.t('analysis.status.cancelling'));
+  }
+
+  protected t(key: string, params?: Record<string, string | number>): string {
+    return this.i18n.t(key, params);
   }
 
   protected formatPercent(probability: number): string {
@@ -277,17 +261,29 @@ export class DiceAnalysisPage {
 
   private multiplicityLabel(count: number): string {
     const labels: Record<number, string> = {
-      0: 'none',
-      1: 'single',
-      2: 'double',
-      3: 'triple',
-      4: 'quadruple',
-      5: 'quintuple',
-      6: 'sextuple',
-      7: 'septuple',
-      8: 'octuple',
+      0: this.i18n.t('label.none'),
+      1: this.i18n.t('label.single'),
+      2: this.i18n.t('label.double'),
+      3: this.i18n.t('label.triple'),
+      4: this.i18n.t('label.quadruple'),
+      5: this.i18n.t('label.quintuple'),
+      6: this.i18n.t('label.sextuple'),
+      7: this.i18n.t('label.septuple'),
+      8: this.i18n.t('label.octuple'),
     };
 
-    return labels[count] ?? `${count}x`;
+    return labels[count] ?? this.i18n.t('label.multiple', { count });
+  }
+
+  private translateThrowValidationError(error: ThrowValidationError): string {
+    if (error.key === 'invalidDieCount') {
+      return this.i18n.t('validator.invalidDieCount', { dieType: error.dieType ?? '' });
+    }
+
+    return this.i18n.t('validator.noDiceSelected');
+  }
+
+  private translateIterationValidationError(_: IterationValidationError): string {
+    return this.i18n.t('validator.invalidIterations');
   }
 }

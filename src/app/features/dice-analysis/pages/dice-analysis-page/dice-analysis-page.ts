@@ -6,10 +6,10 @@ import { DIE_TYPES, getDieSides, type DieType, type ThrowConfig, createEmptyThro
 import { I18nService } from '../../../../core/i18n.service';
 import {
   SimulationCancelledError,
-  runSimulationProgressive,
   type DistributionPoint,
   type SimulationResult,
 } from '../../../../core/simulation.engine';
+import { SimulationWorkerService } from '../../../../core/simulation.worker.service';
 import {
   getTotalDice,
   type IterationValidationError,
@@ -66,6 +66,7 @@ export class DiceAnalysisPage {
   private readonly maxSavedRuns = 200;
   private readonly pageSize = 20;
   private readonly i18n = inject(I18nService);
+  private readonly simulationRunner = inject(SimulationWorkerService);
   protected readonly dieTypes = DIE_TYPES;
   protected readonly config = signal<ThrowConfig>(createEmptyThrowConfig());
   protected readonly iterations = signal(10000);
@@ -270,7 +271,7 @@ export class DiceAnalysisPage {
     try {
       let lastProgressUpdateMs = 0;
 
-      const nextSimulation = await runSimulationProgressive(this.config(), iterationCount, {
+      const nextSimulation = await this.simulationRunner.runSimulationProgressive(this.config(), iterationCount, {
         chunkSize: this.pickChunkSize(iterationCount),
         onProgress: (progress) => {
           const nowMs =

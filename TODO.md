@@ -26,7 +26,7 @@
 
 - [x] Reuse throw composer from throw mode
 - [x] Add simulation control for large iteration counts
-- [ ] Implement simulation worker/service for high-volume runs
+- [x] Implement simulation worker/service for high-volume runs
 - [x] Compute summary statistics (min, max, mean, median, std dev)
 - [x] Display distributions and cumulative probability graphs
 - [x] Add PMF and tail-probability charts
@@ -39,7 +39,7 @@
 
 - [x] Unit tests for dice roll and simulation engines
 - [x] Unit tests for stats calculations
-- [ ] Add E2E smoke test for both routes
+- [x] Add E2E smoke test for both routes
 - [x] Add lint/format check to CI pipeline
 
 ## Release and Deployment
@@ -48,7 +48,6 @@
 - [x] Add repository metadata to package manifest
 - [x] Add production Node static server (`PORT`-aware)
 - [x] Add CI workflow for build + test on pull requests
-- [x] Add automated release/versioning strategy
 
 ## Internationalization
 

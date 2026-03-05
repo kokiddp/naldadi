@@ -23,7 +23,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "format:check": "prettier --check \"src/**/*.spec.ts\" \".github/workflows/*.yml\""
+    "format:check": "prettier --check \"src/**/*.spec.ts\" \".github/workflows/*.yml\"",
+    "e2e": "playwright test"
   },
   "private": true,
   "packageManager": "npm@10.8.2",
@@ -39,6 +40,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@angular/build": "^21.2.0",
     "@angular/cli": "^21.2.0",
     "@angular/compiler-cli": "^21.2.0",

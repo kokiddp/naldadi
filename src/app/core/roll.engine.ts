@@ -1,4 +1,5 @@
 import { DIE_TYPES, getDieSides, type DieType, type ThrowConfig } from './dice.model';
+import { rollDieUnbiased, rollDieWithRng } from './random';
 import { normalizeThrowConfig } from './throw.validators';
 
 export interface ThrowRollResult {
@@ -7,11 +8,7 @@ export interface ThrowRollResult {
   readonly total: number;
 }
 
-function rollDie(sides: number, rng: () => number): number {
-  return Math.floor(rng() * sides) + 1;
-}
-
-export function rollThrow(config: ThrowConfig, rng: () => number = Math.random): ThrowRollResult {
+export function rollThrow(config: ThrowConfig, rng?: () => number): ThrowRollResult {
   const normalizedConfig = normalizeThrowConfig(config);
 
   const rollsByType = {
@@ -30,7 +27,7 @@ export function rollThrow(config: ThrowConfig, rng: () => number = Math.random):
     const count = normalizedConfig[dieType];
 
     for (let index = 0; index < count; index += 1) {
-      const value = rollDie(sides, rng);
+      const value = rng === undefined ? rollDieUnbiased(sides) : rollDieWithRng(sides, rng);
       rollsByType[dieType].push(value);
       total += value;
     }

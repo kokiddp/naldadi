@@ -1,4 +1,5 @@
 import { DIE_TYPES, getDieSides, type ThrowConfig } from './dice.model';
+import { defaultSimulationRandomFloat, rollDieWithRng } from './random';
 import { normalizeThrowConfig } from './throw.validators';
 
 export interface DistributionPoint {
@@ -14,6 +15,9 @@ export interface SimulationStats {
   readonly min: number;
   readonly max: number;
   readonly range: number;
+  readonly theoreticalMin: number;
+  readonly theoreticalMax: number;
+  readonly theoreticalRange: number;
   readonly mean: number;
   readonly median: number;
   readonly mode: number;
@@ -137,7 +141,7 @@ function runIterationBatch(
 
     for (const group of diceGroups) {
       for (let dieIndex = 0; dieIndex < group.count; dieIndex += 1) {
-        const value = Math.floor(rng() * group.sides) + 1;
+        const value = rollDieWithRng(group.sides, rng);
         total += value;
 
         const previousCount = accumulator.valueCounts[value] ?? 0;
@@ -196,20 +200,29 @@ function getMedianFromDistribution(histogram: Map<number, number>, iterations: n
   return (lower + upper) / 2;
 }
 
-function computeTheoreticalStats(diceGroups: DiceGroup[]): { mean: number; stdDev: number } {
+function computeTheoreticalStats(
+  diceGroups: DiceGroup[],
+): { mean: number; stdDev: number; min: number; max: number; range: number } {
   let mean = 0;
   let variance = 0;
+  let min = 0;
+  let max = 0;
 
   for (const group of diceGroups) {
     const dieMean = (group.sides + 1) / 2;
     const dieVariance = (group.sides * group.sides - 1) / 12;
     mean += group.count * dieMean;
     variance += group.count * dieVariance;
+    min += group.count;
+    max += group.count * group.sides;
   }
 
   return {
     mean,
     stdDev: Math.sqrt(Math.max(0, variance)),
+    min,
+    max,
+    range: max - min,
   };
 }
 
@@ -290,6 +303,9 @@ function buildSimulationResult(
       range: Number.isFinite(accumulator.min) && Number.isFinite(accumulator.max)
         ? accumulator.max - accumulator.min
         : 0,
+      theoreticalMin: theoretical.min,
+      theoreticalMax: theoretical.max,
+      theoreticalRange: theoretical.range,
       mean,
       median: getMedianFromDistribution(accumulator.histogram, iterations),
       mode,
@@ -322,13 +338,13 @@ function buildSimulationResult(
 export function runSimulation(
   config: ThrowConfig,
   iterations: number,
-  rng: () => number = Math.random,
+  rng?: () => number,
 ): SimulationResult {
   const startMs = nowMs();
   const { normalizedConfig, groups } = createDiceGroups(config);
   const accumulator = createAccumulator();
 
-  runIterationBatch(accumulator, groups, iterations, rng);
+  runIterationBatch(accumulator, groups, iterations, rng ?? defaultSimulationRandomFloat);
 
   return buildSimulationResult(normalizedConfig, groups, accumulator, iterations, nowMs() - startMs);
 }
@@ -339,7 +355,7 @@ export async function runSimulationProgressive(
   options: ProgressiveSimulationOptions = {},
 ): Promise<SimulationResult> {
   const startMs = nowMs();
-  const rng = options.rng ?? Math.random;
+  const rng = options.rng ?? defaultSimulationRandomFloat;
   const chunkSize = Math.max(1, Math.trunc(options.chunkSize ?? 25000));
   const onProgress = options.onProgress;
   const shouldCancel = options.shouldCancel;

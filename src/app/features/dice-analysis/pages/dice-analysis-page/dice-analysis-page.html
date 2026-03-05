@@ -110,9 +110,13 @@
 				<h3>{{ t('analysis.stat.minMax') }}</h3>
 				<p>{{ result.stats.min }} / {{ result.stats.max }}</p>
 			</article>
-			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.range')">
-				<h3>{{ t('analysis.stat.range') }}</h3>
-				<p>{{ result.stats.range }}</p>
+			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.observedRange')">
+				<h3>{{ t('analysis.stat.observedRange') }}</h3>
+				<p>{{ result.stats.min }} - {{ result.stats.max }} ({{ result.stats.range }})</p>
+			</article>
+			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.theoreticalRange')">
+				<h3>{{ t('analysis.stat.theoreticalRange') }}</h3>
+				<p>{{ result.stats.theoreticalMin }} - {{ result.stats.theoreticalMax }} ({{ result.stats.theoreticalRange }})</p>
 			</article>
 		</div>
 	</section>

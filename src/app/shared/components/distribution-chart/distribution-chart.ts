@@ -10,6 +10,7 @@ interface HistogramPoint {
   readonly shortLabel: string;
   readonly frequency: number;
   readonly probability: number;
+  readonly expectedProbability: number | null;
 }
 
 @Component({
@@ -70,6 +71,7 @@ export class DistributionChart {
         shortLabel: this.formatCompactNumber(point.total),
         frequency: point.frequency,
         probability: point.probability,
+        expectedProbability: point.expectedProbability,
       }));
 
       this.histogramCacheKey = this.points;
@@ -85,6 +87,11 @@ export class DistributionChart {
       const endTotal = chunk[chunk.length - 1]?.total ?? startTotal;
       const frequency = chunk.reduce((sum, point) => sum + point.frequency, 0);
       const probability = chunk.reduce((sum, point) => sum + point.probability, 0);
+      const expectedProbabilitySum = chunk.reduce(
+        (sum, point) => sum + (point.expectedProbability ?? 0),
+        0,
+      );
+      const hasExpectedProbability = chunk.some((point) => point.expectedProbability !== null);
 
       histogramPoints.push({
         key: `${startTotal}-${endTotal}`,
@@ -95,6 +102,7 @@ export class DistributionChart {
             : `${this.formatCompactNumber(startTotal)}-${this.formatCompactNumber(endTotal)}`,
         frequency,
         probability,
+        expectedProbability: hasExpectedProbability ? expectedProbabilitySum : null,
       });
     }
 
@@ -209,14 +217,29 @@ export class DistributionChart {
   }
 
   protected formatPercent(probability: number): string {
-    return `${(probability * 100).toFixed(2)}%`;
+    const percent = probability * 100;
+    if (percent >= 1) {
+      return `${percent.toFixed(2)}%`;
+    }
+
+    if (percent >= 0.01) {
+      return `${percent.toFixed(4)}%`;
+    }
+
+    if (percent > 0) {
+      return `${percent.toFixed(6)}%`;
+    }
+
+    return '0.00%';
   }
 
   protected getHistogramTooltip(point: HistogramPoint): string {
     return this.i18n.t('chart.tooltip.histogramPoint', {
       label: point.label,
       frequency: point.frequency.toLocaleString(),
-      probability: this.formatPercent(point.probability),
+      actualProbability: this.formatPercent(point.probability),
+      expectedProbability:
+        point.expectedProbability === null ? '-' : this.formatPercent(point.expectedProbability),
     });
   }
 

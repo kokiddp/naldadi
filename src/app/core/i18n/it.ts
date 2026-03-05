@@ -31,7 +31,7 @@ export const IT_DICTIONARY: Dictionary = {
   'analysis.matches.title': 'Coincidenze Esatte Dadi (Esclusive)',
   'analysis.matches.subtitle': 'Ogni lancio viene contato solo nella sua classe di coincidenza massima (i tripli non vengono contati come doppi).',
   'analysis.matches.none': 'Nessuna classe di coincidenza con valori ripetuti per questa configurazione.',
-  'analysis.matches.entry': '{{label}}: {{count}} lanci ({{probability}})',
+  'analysis.matches.entry': '{{label}}: {{count}} lanci (reale {{actualProbability}}, attesa {{expectedProbability}})',
   'analysis.outcomes.title': 'Esiti Piu Probabili',
   'analysis.outcomes.total': 'Totale {{total}}',
   'analysis.outcomes.hits': '{{hits}} occorrenze ({{probability}})',
@@ -111,7 +111,7 @@ export const IT_DICTIONARY: Dictionary = {
   'analysis.probabilityBuckets.label.lessThan': 'Meno del {{to}}%',
   'analysis.probabilityBuckets.label.range': 'Dal {{from}}% al {{to}}%',
   'analysis.probabilityBuckets.label.finalRange': 'Dal {{from}}% al {{to}}%',
-  'analysis.probabilityBuckets.entry': 'Totale {{total}} ({{probability}})',
+  'analysis.probabilityBuckets.entry': 'Totale {{total}} (reale {{actualProbability}}, attesa {{expectedProbability}})',
   'analysis.probabilityBuckets.empty': 'Nessun totale in questa fascia.',
 
   'analysis.saved.title': 'Analisi Salvate',
@@ -137,7 +137,7 @@ export const IT_DICTIONARY: Dictionary = {
 
   'chart.marker.mean': 'Media {{value}}',
   'chart.marker.median': 'Mediana {{value}}',
-  'chart.tooltip.histogramPoint': 'Totale {{label}}: {{frequency}} risultati ({{probability}})',
+  'chart.tooltip.histogramPoint': 'Totale {{label}}: {{frequency}} risultati (reale {{actualProbability}}, attesa {{expectedProbability}})',
   'chart.note.binned': 'L istogramma e raggruppato per leggibilita e prestazioni. Passa sui blocchi per le percentuali esatte.',
   'chart.noData': 'Nessun dato disponibile.',
 

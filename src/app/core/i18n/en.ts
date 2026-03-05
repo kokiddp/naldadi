@@ -31,7 +31,7 @@ export const EN_DICTIONARY: Dictionary = {
   'analysis.matches.title': 'Exact Matching Dice (Exclusive)',
   'analysis.matches.subtitle': 'A throw is counted only in its highest match class (triples are not counted as doubles).',
   'analysis.matches.none': 'No repeated-value match classes for this throw configuration.',
-  'analysis.matches.entry': '{{label}}: {{count}} throws ({{probability}})',
+  'analysis.matches.entry': '{{label}}: {{count}} throws (actual {{actualProbability}}, expected {{expectedProbability}})',
   'analysis.outcomes.title': 'Top Outcomes by Probability',
   'analysis.outcomes.total': 'Total {{total}}',
   'analysis.outcomes.hits': '{{hits}} hits ({{probability}})',
@@ -111,7 +111,7 @@ export const EN_DICTIONARY: Dictionary = {
   'analysis.probabilityBuckets.label.lessThan': 'Less than {{to}}%',
   'analysis.probabilityBuckets.label.range': '{{from}}% to {{to}}%',
   'analysis.probabilityBuckets.label.finalRange': '{{from}}% to {{to}}%',
-  'analysis.probabilityBuckets.entry': 'Total {{total}} ({{probability}})',
+  'analysis.probabilityBuckets.entry': 'Total {{total}} (actual {{actualProbability}}, expected {{expectedProbability}})',
   'analysis.probabilityBuckets.empty': 'No totals in this range.',
 
   'analysis.saved.title': 'Saved Analysis Runs',
@@ -137,7 +137,7 @@ export const EN_DICTIONARY: Dictionary = {
 
   'chart.marker.mean': 'Mean {{value}}',
   'chart.marker.median': 'Median {{value}}',
-  'chart.tooltip.histogramPoint': 'Total {{label}}: {{frequency}} results ({{probability}})',
+  'chart.tooltip.histogramPoint': 'Total {{label}}: {{frequency}} results (actual {{actualProbability}}, expected {{expectedProbability}})',
   'chart.note.binned': 'Histogram is binned for readability and performance. Hover bars for exact percentages.',
   'chart.noData': 'No data yet.',
 

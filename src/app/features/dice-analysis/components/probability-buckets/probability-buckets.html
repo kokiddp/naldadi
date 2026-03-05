@@ -7,7 +7,7 @@
       <h4>{{ formatProbabilityBucketLabel(bucket) }}</h4>
       <ul>
         <li *ngFor="let point of bucket.points; trackBy: trackByTotal">
-          {{ t('analysis.probabilityBuckets.entry', { total: point.total, probability: formatPercent(point.probability) }) }}
+          {{ t('analysis.probabilityBuckets.entry', { total: point.total, actualProbability: formatPercent(point.probability), expectedProbability: formatExpectedPercent(point.expectedProbability) }) }}
         </li>
       </ul>
     </article>

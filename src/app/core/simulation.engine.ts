@@ -6,6 +6,7 @@ export interface DistributionPoint {
   readonly total: number;
   readonly frequency: number;
   readonly probability: number;
+  readonly expectedProbability: number | null;
   readonly cumulativeProbability: number;
 }
 
@@ -45,6 +46,7 @@ export interface SimulationStats {
     readonly matchSize: number;
     readonly count: number;
     readonly probability: number;
+    readonly expectedProbability: number | null;
   }>;
 }
 
@@ -91,6 +93,9 @@ interface DiceGroup {
   readonly sides: number;
   readonly count: number;
 }
+
+const MAX_THEORETICAL_PROBABILITY_OPERATIONS = 20_000_000;
+const MAX_EXACT_MATCH_EXPECTED_DICE = 120;
 
 function nowMs(): number {
   if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
@@ -226,6 +231,129 @@ function computeTheoreticalStats(
   };
 }
 
+function computeTheoreticalDistribution(
+  diceGroups: DiceGroup[],
+): { probabilities: Float64Array; minTotal: number; maxTotal: number } | null {
+  const totalDice = diceGroups.reduce((sum, group) => sum + group.count, 0);
+  if (totalDice === 0) {
+    return {
+      probabilities: new Float64Array([1]),
+      minTotal: 0,
+      maxTotal: 0,
+    };
+  }
+
+  let estimatedOperations = 0;
+  let estimatedMax = 0;
+  for (const group of diceGroups) {
+    for (let index = 0; index < group.count; index += 1) {
+      estimatedOperations += Math.max(1, estimatedMax + 1) * group.sides;
+      estimatedMax += group.sides;
+      if (estimatedOperations > MAX_THEORETICAL_PROBABILITY_OPERATIONS) {
+        return null;
+      }
+    }
+  }
+
+  let probabilities = new Float64Array([1]);
+  let currentMax = 0;
+
+  for (const group of diceGroups) {
+    const perFaceProbability = 1 / group.sides;
+
+    for (let dieIndex = 0; dieIndex < group.count; dieIndex += 1) {
+      const nextMax = currentMax + group.sides;
+      const nextProbabilities = new Float64Array(nextMax + 1);
+
+      for (let sum = 0; sum <= currentMax; sum += 1) {
+        const currentProbability = probabilities[sum] ?? 0;
+        if (currentProbability === 0) {
+          continue;
+        }
+
+        for (let face = 1; face <= group.sides; face += 1) {
+          nextProbabilities[sum + face] += currentProbability * perFaceProbability;
+        }
+      }
+
+      probabilities = nextProbabilities;
+      currentMax = nextMax;
+    }
+  }
+
+  return {
+    probabilities,
+    minTotal: totalDice,
+    maxTotal: currentMax,
+  };
+}
+
+function buildBinomialPmf(trials: number, successProbability: number): Float64Array {
+  const probabilities = new Float64Array(trials + 1);
+
+  if (successProbability <= 0) {
+    probabilities[0] = 1;
+    return probabilities;
+  }
+
+  if (successProbability >= 1) {
+    probabilities[trials] = 1;
+    return probabilities;
+  }
+
+  probabilities[0] = (1 - successProbability) ** trials;
+  const ratio = successProbability / (1 - successProbability);
+
+  for (let successes = 0; successes < trials; successes += 1) {
+    probabilities[successes + 1] =
+      probabilities[successes] * ((trials - successes) / (successes + 1)) * ratio;
+  }
+
+  return probabilities;
+}
+
+function computeHomogeneousExactMatchProbabilities(totalDice: number, sides: number): Float64Array | null {
+  if (totalDice <= 1 || totalDice > MAX_EXACT_MATCH_EXPECTED_DICE) {
+    return null;
+  }
+
+  const pmfCache = new Map<string, Float64Array>();
+  let current = Array.from({ length: totalDice + 1 }, () => new Float64Array(totalDice + 1));
+  current[0]![0] = 1;
+
+  for (let faceIndex = 0; faceIndex < sides; faceIndex += 1) {
+    const remainingFaces = sides - faceIndex;
+    const next = Array.from({ length: totalDice + 1 }, () => new Float64Array(totalDice + 1));
+
+    for (let used = 0; used <= totalDice; used += 1) {
+      const trials = totalDice - used;
+      const cacheKey = `${trials}|${remainingFaces}`;
+      let pmf = pmfCache.get(cacheKey);
+      if (pmf === undefined) {
+        pmf = buildBinomialPmf(trials, 1 / remainingFaces);
+        pmfCache.set(cacheKey, pmf);
+      }
+
+      for (let maxCount = 0; maxCount <= totalDice; maxCount += 1) {
+        const stateProbability = current[used]![maxCount] ?? 0;
+        if (stateProbability === 0) {
+          continue;
+        }
+
+        for (let successes = 0; successes <= trials; successes += 1) {
+          const nextUsed = used + successes;
+          const nextMax = Math.max(maxCount, successes);
+          next[nextUsed]![nextMax] += stateProbability * (pmf[successes] ?? 0);
+        }
+      }
+    }
+
+    current = next;
+  }
+
+  return current[totalDice] ?? null;
+}
+
 function buildSimulationResult(
   normalizedConfig: ThrowConfig,
   diceGroups: DiceGroup[],
@@ -240,13 +368,23 @@ function buildSimulationResult(
 
   const distributionEntries = [...accumulator.histogram.entries()].sort((a, b) => a[0] - b[0]);
   let runningFrequency = 0;
+  const theoreticalDistribution = computeTheoreticalDistribution(diceGroups);
 
   const distribution: DistributionPoint[] = distributionEntries.map(([total, frequency]) => {
     runningFrequency += frequency;
+
+    const expectedProbability =
+      theoreticalDistribution !== null &&
+      total >= theoreticalDistribution.minTotal &&
+      total <= theoreticalDistribution.maxTotal
+        ? (theoreticalDistribution.probabilities[total] ?? 0)
+        : null;
+
     return {
       total,
       frequency,
       probability: frequency / iterations,
+      expectedProbability,
       cumulativeProbability: runningFrequency / iterations,
     };
   });
@@ -282,6 +420,10 @@ function buildSimulationResult(
   const p99 = getQuantileFromDistribution(accumulator.histogram, iterations, 0.99);
 
   const theoretical = computeTheoreticalStats(diceGroups);
+  const homogeneousExpectedMatchProbabilities =
+    diceGroups.length === 1
+      ? computeHomogeneousExactMatchProbabilities(totalDice, diceGroups[0]!.sides)
+      : null;
   const exactMatchCounts = Array.from({ length: Math.max(0, totalDice - 1) }, (_, index) => {
     const matchSize = index + 2;
     const count = accumulator.exactMatchCounts[matchSize] ?? 0;
@@ -290,6 +432,10 @@ function buildSimulationResult(
       matchSize,
       count,
       probability: count / iterations,
+      expectedProbability:
+        homogeneousExpectedMatchProbabilities === null
+          ? null
+          : (homogeneousExpectedMatchProbabilities[matchSize] ?? 0),
     };
   });
 

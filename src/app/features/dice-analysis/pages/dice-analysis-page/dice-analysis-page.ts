@@ -47,6 +47,7 @@ interface ExactMatchStat {
   readonly label: string;
   readonly count: number;
   readonly probability: number;
+  readonly expectedProbability: number | null;
 }
 
 interface SavedAnalysisItem {
@@ -172,6 +173,7 @@ export class DiceAnalysisPage {
       label: this.multiplicityLabel(entry.matchSize),
       count: entry.count,
       probability: entry.probability,
+      expectedProbability: entry.expectedProbability,
     }));
   });
 
@@ -329,6 +331,27 @@ export class DiceAnalysisPage {
 
   protected formatPercent(probability: number): string {
     return `${(probability * 100).toFixed(2)}%`;
+  }
+
+  protected formatProbabilityPercent(probability: number): string {
+    const percent = probability * 100;
+    if (percent >= 1) {
+      return `${percent.toFixed(2)}%`;
+    }
+
+    if (percent >= 0.01) {
+      return `${percent.toFixed(4)}%`;
+    }
+
+    if (percent > 0) {
+      return `${percent.toFixed(6)}%`;
+    }
+
+    return '0.00%';
+  }
+
+  protected formatExpectedPercent(probability: number | null): string {
+    return probability === null ? '-' : this.formatProbabilityPercent(probability);
   }
 
   protected trackByTotal(_: number, point: DistributionPoint): number {

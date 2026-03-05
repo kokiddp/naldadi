@@ -82,7 +82,7 @@
 
 		<ul *ngIf="result.stats.totalDice > 1 && exactMatchStats().length > 0; else noMatchStats">
 			<li *ngFor="let entry of exactMatchStats(); trackBy: trackByMatchSize">
-				<strong>{{ t('analysis.matches.entry', { label: entry.label, count: entry.count.toLocaleString(), probability: formatPercent(entry.probability) }) }}</strong>
+				<strong>{{ t('analysis.matches.entry', { label: entry.label, count: entry.count.toLocaleString(), actualProbability: formatProbabilityPercent(entry.probability), expectedProbability: formatExpectedPercent(entry.expectedProbability) }) }}</strong>
 			</li>
 		</ul>
 
@@ -105,10 +105,6 @@
 			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.throughput')">
 				<h3>{{ t('analysis.stat.throughput') }}</h3>
 				<p>{{ result.stats.throwsPerSecond.toFixed(0) }} throws/s</p>
-			</article>
-			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.minMax')">
-				<h3>{{ t('analysis.stat.minMax') }}</h3>
-				<p>{{ result.stats.min }} / {{ result.stats.max }}</p>
 			</article>
 			<article class="stat-card" tabindex="0" [attr.data-help]="t('analysis.help.observedRange')">
 				<h3>{{ t('analysis.stat.observedRange') }}</h3>

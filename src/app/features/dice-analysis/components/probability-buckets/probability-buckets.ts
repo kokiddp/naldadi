@@ -35,7 +35,24 @@ export class ProbabilityBuckets {
   }
 
   protected formatPercent(probability: number): string {
-    return `${(probability * 100).toFixed(2)}%`;
+    const percent = probability * 100;
+    if (percent >= 1) {
+      return `${percent.toFixed(2)}%`;
+    }
+
+    if (percent >= 0.01) {
+      return `${percent.toFixed(4)}%`;
+    }
+
+    if (percent > 0) {
+      return `${percent.toFixed(6)}%`;
+    }
+
+    return '0.00%';
+  }
+
+  protected formatExpectedPercent(probability: number | null): string {
+    return probability === null ? '-' : this.formatPercent(probability);
   }
 
   protected formatProbabilityBucketLabel(row: ProbabilityBucketItem): string {

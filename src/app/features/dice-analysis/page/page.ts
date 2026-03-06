@@ -184,32 +184,38 @@ export class DiceAnalysisPage {
       return [];
     }
 
+    const pointsByProbability = [...sim.distribution].sort(
+      (a, b) => a.probability - b.probability || a.total - b.total,
+    );
+    const targetBucketCount = Math.min(
+      8,
+      Math.max(3, Math.round(Math.log2(pointsByProbability.length))),
+    );
+    const bucketCount = Math.min(targetBucketCount, pointsByProbability.length);
     const rows: ProbabilityBucketItem[] = [];
 
-    for (let toPercent = 5; toPercent <= 100; toPercent += 5) {
-      const fromPercent = toPercent - 5;
-      const points = sim.distribution.filter((point) => {
-        const probabilityPercent = point.probability * 100;
+    for (let index = 0; index < bucketCount; index += 1) {
+      const start = Math.floor((index * pointsByProbability.length) / bucketCount);
+      const end = Math.floor(((index + 1) * pointsByProbability.length) / bucketCount);
 
-        if (fromPercent === 0) {
-          return probabilityPercent < toPercent;
-        }
+      if (end <= start) {
+        continue;
+      }
 
-        if (toPercent === 100) {
-          return probabilityPercent >= fromPercent && probabilityPercent <= toPercent;
-        }
-
-        return probabilityPercent >= fromPercent && probabilityPercent < toPercent;
-      });
+      const slice = pointsByProbability.slice(start, end);
+      const fromPercent = slice[0]!.probability * 100;
+      const toPercent = slice[slice.length - 1]!.probability * 100;
+      const points = [...slice].sort((a, b) => a.total - b.total);
 
       rows.push({
+        id: `${fromPercent.toFixed(10)}-${toPercent.toFixed(10)}-${index}`,
         fromPercent,
         toPercent,
         points,
       });
     }
 
-    return rows.filter((row) => row.points.length > 0);
+    return rows.reverse();
   });
 
   protected readonly centralBandProbability = computed(() => {

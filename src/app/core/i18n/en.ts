@@ -106,11 +106,10 @@ export const EN_DICTIONARY: Dictionary = {
   'analysis.help.multiplicity.perDieType': 'Shows each selected die type and how many of that die are included in one throw (single, double, triple, etc.).',
   'analysis.help.multiplicity.combined': 'Groups the throw by multiplicity size. For example, how many die types are doubles, triples, and so on, plus combined dice count.',
 
-  'analysis.probabilityBuckets.title': 'Outcome Probability Buckets (5%)',
-  'analysis.probabilityBuckets.subtitle': 'Each bucket groups totals by their own probability value.',
-  'analysis.probabilityBuckets.label.lessThan': 'Less than {{to}}%',
+  'analysis.probabilityBuckets.title': 'Outcome Probability Buckets',
+  'analysis.probabilityBuckets.subtitle': 'Ranges are adapted to each throw distribution so similarly likely totals are grouped together.',
+  'analysis.probabilityBuckets.label.exact': '{{value}}%',
   'analysis.probabilityBuckets.label.range': '{{from}}% to {{to}}%',
-  'analysis.probabilityBuckets.label.finalRange': '{{from}}% to {{to}}%',
   'analysis.probabilityBuckets.entry': 'Total {{total}} (actual {{actualProbability}}, expected {{expectedProbability}})',
   'analysis.probabilityBuckets.empty': 'No totals in this range.',
 

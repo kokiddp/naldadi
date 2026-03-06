@@ -106,11 +106,10 @@ export const IT_DICTIONARY: Dictionary = {
   'analysis.help.multiplicity.perDieType': 'Mostra ogni tipo di dado selezionato e quanti dadi di quel tipo sono inclusi in un lancio (singolo, doppio, triplo, ecc.).',
   'analysis.help.multiplicity.combined': 'Raggruppa il lancio per livello di molteplicita. Per esempio quanti tipi di dado sono doppi, tripli e cosi via, piu il conteggio totale.',
 
-  'analysis.probabilityBuckets.title': 'Fasce Probabilita Esiti (5%)',
-  'analysis.probabilityBuckets.subtitle': 'Ogni fascia raggruppa i totali in base alla loro probabilita individuale.',
-  'analysis.probabilityBuckets.label.lessThan': 'Meno del {{to}}%',
+  'analysis.probabilityBuckets.title': 'Fasce di Probabilita degli Esiti',
+  'analysis.probabilityBuckets.subtitle': 'Le fasce si adattano alla distribuzione del lancio, raggruppando insieme i totali con probabilita simili.',
+  'analysis.probabilityBuckets.label.exact': '{{value}}%',
   'analysis.probabilityBuckets.label.range': 'Dal {{from}}% al {{to}}%',
-  'analysis.probabilityBuckets.label.finalRange': 'Dal {{from}}% al {{to}}%',
   'analysis.probabilityBuckets.entry': 'Totale {{total}} (reale {{actualProbability}}, attesa {{expectedProbability}})',
   'analysis.probabilityBuckets.empty': 'Nessun totale in questa fascia.',
 

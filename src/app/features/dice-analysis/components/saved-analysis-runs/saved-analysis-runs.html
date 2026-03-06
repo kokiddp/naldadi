@@ -1,39 +1,43 @@
-<section class="saved-runs" *ngIf="items.length > 0">
-  <div class="saved-runs-header">
-    <h3>{{ t('analysis.saved.title') }}</h3>
-    <button type="button" class="saved-runs-clear-btn" (click)="onClear()" [disabled]="disabled">
-      {{ t('analysis.saved.clear') }}
-    </button>
-  </div>
+@if (items.length > 0) {
+  <section class="saved-runs">
+    <div class="saved-runs-header">
+      <h3>{{ t('analysis.saved.title') }}</h3>
+      <button type="button" class="saved-runs-clear-btn" (click)="onClear()" [disabled]="disabled">
+        {{ t('analysis.saved.clear') }}
+      </button>
+    </div>
 
-  <ul>
-    <li
-      *ngFor="let item of items; trackBy: trackBySavedRun"
-      [class.is-active]="item.id === activeItemId"
-      [attr.aria-current]="item.id === activeItemId ? 'true' : null"
-    >
-      <div class="saved-runs-meta">
-        <strong>{{ item.title }}</strong>
-        <span>{{ item.summary }}</span>
-      </div>
-      <div class="saved-runs-actions">
-        <button type="button" class="saved-runs-load-btn" (click)="onLoad(item.id)" [disabled]="disabled">
-          {{ t('analysis.saved.load') }}
-        </button>
-        <button type="button" class="saved-runs-delete-btn" (click)="onDelete(item.id)" [disabled]="disabled">
-          {{ t('analysis.saved.delete') }}
-        </button>
-      </div>
-    </li>
-  </ul>
+    <ul>
+      @for (item of items; track trackBySavedRun($index, item)) {
+        <li
+          [class.is-active]="item.id === activeItemId"
+          [attr.aria-current]="item.id === activeItemId ? 'true' : null"
+        >
+          <div class="saved-runs-meta">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.summary }}</span>
+          </div>
+          <div class="saved-runs-actions">
+            <button type="button" class="saved-runs-load-btn" (click)="onLoad(item.id)" [disabled]="disabled">
+              {{ t('analysis.saved.load') }}
+            </button>
+            <button type="button" class="saved-runs-delete-btn" (click)="onDelete(item.id)" [disabled]="disabled">
+              {{ t('analysis.saved.delete') }}
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
 
-  <div class="saved-runs-pagination" *ngIf="totalPages > 1">
-    <button type="button" (click)="onPreviousPage()" [disabled]="disabled || currentPage <= 1">
-      {{ t('pagination.previous') }}
-    </button>
-    <span>{{ t('pagination.pageInfo', { page: currentPage, totalPages: totalPages }) }}</span>
-    <button type="button" (click)="onNextPage()" [disabled]="disabled || currentPage >= totalPages">
-      {{ t('pagination.next') }}
-    </button>
-  </div>
-</section>
+    @if (totalPages > 1) {
+      <app-pagination-controls
+        [currentPage]="currentPage"
+        [totalPages]="totalPages"
+        [previousDisabled]="disabled || currentPage <= 1"
+        [nextDisabled]="disabled || currentPage >= totalPages"
+        (previous)="onPreviousPage()"
+        (next)="onNextPage()"
+      />
+    }
+  </section>
+}

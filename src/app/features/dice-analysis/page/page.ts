@@ -2,31 +2,32 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { DIE_TYPES, getDieSides, type DieType, type ThrowConfig, createEmptyThrowConfig } from '../../../../core/dice.model';
-import { I18nService } from '../../../../core/i18n.service';
+import { DIE_TYPES, getDieSides, type DieType, type ThrowConfig, createEmptyThrowConfig } from '../../../core/dice.model';
+import { I18nService } from '../../../core/i18n.service';
 import {
   SimulationCancelledError,
   type DistributionPoint,
   type SimulationResult,
-} from '../../../../core/simulation.engine';
-import { SimulationWorkerService } from '../../../../core/simulation.worker.service';
+} from '../../../core/simulation.engine';
+import { SimulationWorkerService } from '../../../core/simulation.worker.service';
 import {
   getTotalDice,
   type IterationValidationError,
   type ThrowValidationError,
   validateIterations,
   validateThrowConfig,
-} from '../../../../core/throw.validators';
-import { DistributionChart } from '../../../../shared/components/distribution-chart/distribution-chart';
-import { ThrowComposer } from '../../../../shared/components/throw-composer/throw-composer';
+} from '../../../core/throw.validators';
+import { DistributionChart } from '../../../shared/components/distribution-chart/distribution-chart';
+import { FeaturePanel } from '../../../shared/components/feature-panel/feature-panel';
+import { ThrowComposer } from '../../../shared/components/throw-composer/throw-composer';
 import {
   ProbabilityBuckets,
   type ProbabilityBucketItem,
-} from '../../components/probability-buckets/probability-buckets';
+} from '../components/probability-buckets/probability-buckets';
 import {
   SavedAnalysisRuns,
   type SavedAnalysisRunView,
-} from '../../components/saved-analysis-runs/saved-analysis-runs';
+} from '../components/saved-analysis-runs/saved-analysis-runs';
 
 interface CompositionRow {
   readonly dieType: DieType;
@@ -58,9 +59,9 @@ interface SavedAnalysisItem {
 
 @Component({
   selector: 'app-dice-analysis-page',
-  imports: [CommonModule, FormsModule, ThrowComposer, DistributionChart, ProbabilityBuckets, SavedAnalysisRuns],
-  templateUrl: './dice-analysis-page.html',
-  styleUrl: './dice-analysis-page.scss',
+  imports: [CommonModule, FormsModule, FeaturePanel, ThrowComposer, DistributionChart, ProbabilityBuckets, SavedAnalysisRuns],
+  templateUrl: './page.html',
+  styleUrl: './page.scss',
 })
 export class DiceAnalysisPage {
   private readonly savedRunsStorageKey = 'naldadi.analysis.savedRuns';

@@ -82,19 +82,6 @@ button:disabled {
   gap: 0.4rem;
 }
 
-.saved-runs-pagination {
-  align-items: center;
-  display: flex;
-  gap: 0.6rem;
-  justify-content: center;
-  margin-top: 0.6rem;
-}
-
-.saved-runs-pagination span {
-  color: #294357;
-  font-size: 0.92rem;
-}
-
 @media (max-width: 800px) {
   .saved-runs li {
     flex-direction: column;
@@ -107,8 +94,7 @@ button:disabled {
 }
 
 @media (max-width: 460px) {
-  .saved-runs-actions,
-  .saved-runs-pagination {
+  .saved-runs-actions {
     flex-wrap: wrap;
   }
 }

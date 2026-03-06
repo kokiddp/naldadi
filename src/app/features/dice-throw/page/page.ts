@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 
-import { createEmptyThrowConfig, DIE_TYPES, type ThrowConfig } from '../../../../core/dice.model';
-import { I18nService } from '../../../../core/i18n.service';
-import { rollThrow, type ThrowRollResult } from '../../../../core/roll.engine';
-import { getTotalDice, validateThrowConfig, type ThrowValidationError } from '../../../../core/throw.validators';
-import { ThrowComposer } from '../../../../shared/components/throw-composer/throw-composer';
+import { createEmptyThrowConfig, DIE_TYPES, type ThrowConfig } from '../../../core/dice.model';
+import { I18nService } from '../../../core/i18n.service';
+import { rollThrow, type ThrowRollResult } from '../../../core/roll.engine';
+import { getTotalDice, validateThrowConfig, type ThrowValidationError } from '../../../core/throw.validators';
+import { FeaturePanel } from '../../../shared/components/feature-panel/feature-panel';
+import { PaginationControls } from '../../../shared/components/pagination-controls/pagination-controls';
+import { ThrowComposer } from '../../../shared/components/throw-composer/throw-composer';
 
 interface ThrowHistoryItem {
   readonly id: number;
@@ -15,9 +17,9 @@ interface ThrowHistoryItem {
 
 @Component({
   selector: 'app-dice-throw-page',
-  imports: [CommonModule, ThrowComposer],
-  templateUrl: './dice-throw-page.html',
-  styleUrl: './dice-throw-page.scss',
+  imports: [CommonModule, FeaturePanel, PaginationControls, ThrowComposer],
+  templateUrl: './page.html',
+  styleUrl: './page.scss',
 })
 export class DiceThrowPage {
   private readonly historyStorageKey = 'naldadi.throw.history';

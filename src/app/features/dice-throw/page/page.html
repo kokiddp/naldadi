@@ -1,0 +1,63 @@
+<app-feature-panel [title]="t('throw.title')" [subtitle]="t('throw.subtitle')">
+
+	<div class="layout">
+		<app-throw-composer [config]="config()" (configChange)="onConfigChange($event)" />
+
+		<div class="action-block">
+			<button type="button" (click)="roll()" [disabled]="!canRoll()">{{ t('throw.roll') }}</button>
+			@if (validationError(); as error) {
+				<p class="error">{{ error }}</p>
+			}
+
+			@if (result(); as rollResult) {
+				<section class="result">
+					<h3>{{ t('throw.latestResult') }}</h3>
+					<p class="total">{{ t('throw.total') }}: {{ rollResult.total }}</p>
+					<ul>
+						@for (dieType of dieTypes; track dieType) {
+							<li>
+								<strong>{{ dieType }}:</strong>
+								{{ getRollValues(rollResult, dieType) }}
+							</li>
+						}
+					</ul>
+				</section>
+			}
+		</div>
+	</div>
+
+	@if (history().length > 0) {
+		<section class="history">
+			<div class="history-header">
+				<h3>{{ t('throw.history') }}</h3>
+				<button type="button" class="history-clear-btn" (click)="clearHistory()">
+					{{ t('throw.history.clear') }}
+				</button>
+			</div>
+			<ul>
+				@for (item of pagedHistory(); track trackByHistoryId($index, item)) {
+					<li>
+						<div>
+							<strong>{{ t('throw.historyTotal', { total: item.total }) }}</strong>
+							<span>{{ item.summary }}</span>
+						</div>
+						<button type="button" class="history-delete-btn" (click)="deleteHistoryItem(item.id)">
+							{{ t('throw.history.delete') }}
+						</button>
+					</li>
+				}
+			</ul>
+
+			@if (totalHistoryPages() > 1) {
+				<app-pagination-controls
+					[currentPage]="historyPage()"
+					[totalPages]="totalHistoryPages()"
+					[previousDisabled]="!canGoToPreviousHistoryPage()"
+					[nextDisabled]="!canGoToNextHistoryPage()"
+					(previous)="previousHistoryPage()"
+					(next)="nextHistoryPage()"
+				/>
+			}
+		</section>
+	}
+</app-feature-panel>

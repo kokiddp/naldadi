@@ -110,8 +110,8 @@ src/app/
 	core/i18n/
 	features/dice-analysis/components/
 	features/
-		dice-throw/pages/dice-throw-page/
-		dice-analysis/pages/dice-analysis-page/
+		dice-throw/page/
+		dice-analysis/page/
 ```
 
 ## Planned Milestones

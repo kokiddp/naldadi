@@ -1,15 +1,21 @@
-<section class="percentile-bands" *ngIf="buckets.length > 0">
-  <h3>{{ t('analysis.probabilityBuckets.title') }}</h3>
-  <p>{{ t('analysis.probabilityBuckets.subtitle') }}</p>
+@if (buckets.length > 0) {
+  <section class="percentile-bands">
+    <h3>{{ t('analysis.probabilityBuckets.title') }}</h3>
+    <p>{{ t('analysis.probabilityBuckets.subtitle') }}</p>
 
-  <div class="bucket-grid">
-    <article class="bucket-card" *ngFor="let bucket of buckets; trackBy: trackByBucket">
-      <h4>{{ formatProbabilityBucketLabel(bucket) }}</h4>
-      <ul>
-        <li *ngFor="let point of bucket.points; trackBy: trackByTotal">
-          {{ t('analysis.probabilityBuckets.entry', { total: point.total, actualProbability: formatPercent(point.probability), expectedProbability: formatExpectedPercent(point.expectedProbability) }) }}
-        </li>
-      </ul>
-    </article>
-  </div>
-</section>
+    <div class="bucket-grid">
+      @for (bucket of buckets; track trackByBucket($index, bucket)) {
+        <article class="bucket-card">
+          <h4>{{ formatProbabilityBucketLabel(bucket) }}</h4>
+          <ul>
+            @for (point of bucket.points; track trackByTotal($index, point)) {
+              <li>
+                {{ t('analysis.probabilityBuckets.entry', { total: point.total, actualProbability: formatPercent(point.probability), expectedProbability: formatExpectedPercent(point.expectedProbability) }) }}
+              </li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  </section>
+}

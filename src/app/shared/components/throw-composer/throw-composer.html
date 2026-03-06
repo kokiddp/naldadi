@@ -2,37 +2,41 @@
   <h3>{{ t('composer.title') }}</h3>
 
   <div class="rows">
-    <div class="row" *ngFor="let dieType of dieTypes; trackBy: trackByDieType">
-      <div class="die-label">{{ dieType }}</div>
+    @for (dieType of dieTypes; track trackByDieType($index, dieType)) {
+      <div class="row">
+        <div class="die-label">{{ dieType }}</div>
 
-      <div class="controls">
-        <button
-          type="button"
-          (click)="decrease(dieType)"
-          [attr.aria-label]="t('composer.aria.decrease', { dieType: dieType })"
-        >
-          -
-        </button>
+        <div class="controls">
+          <button
+            type="button"
+            (click)="decrease(dieType)"
+            [attr.aria-label]="t('composer.aria.decrease', { dieType: dieType })"
+          >
+            -
+          </button>
 
-        <input
-          type="number"
-          min="0"
-          step="1"
-          [value]="normalizedConfig[dieType]"
-          (input)="onCountChange(dieType, $any($event.target).value)"
-          [attr.aria-label]="t('composer.aria.count', { dieType: dieType })"
-        />
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [value]="normalizedConfig[dieType]"
+            (input)="onCountChange(dieType, $any($event.target).value)"
+            [attr.aria-label]="t('composer.aria.count', { dieType: dieType })"
+          />
 
-        <button
-          type="button"
-          (click)="increase(dieType)"
-          [attr.aria-label]="t('composer.aria.increase', { dieType: dieType })"
-        >
-          +
-        </button>
+          <button
+            type="button"
+            (click)="increase(dieType)"
+            [attr.aria-label]="t('composer.aria.increase', { dieType: dieType })"
+          >
+            +
+          </button>
+        </div>
       </div>
-    </div>
+    }
   </div>
 
-  <p class="error" *ngIf="configErrors.length > 0">{{ getConfigErrorMessage(configErrors[0]!) }}</p>
+  @if (configErrors.length > 0) {
+    <p class="error">{{ getConfigErrorMessage(configErrors[0]!) }}</p>
+  }
 </section>

@@ -1,0 +1,9 @@
+<div class="pagination-controls">
+  <button type="button" (click)="onPrevious()" [disabled]="previousDisabled">
+    {{ t('pagination.previous') }}
+  </button>
+  <span>{{ t('pagination.pageInfo', { page: currentPage, totalPages: totalPages }) }}</span>
+  <button type="button" (click)="onNext()" [disabled]="nextDisabled">
+    {{ t('pagination.next') }}
+  </button>
+</div>

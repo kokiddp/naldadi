@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DiceThrowPage } from './dice-throw-page';
+import { DiceThrowPage } from './page';
 
 describe('DiceThrowPage', () => {
   beforeEach(async () => {

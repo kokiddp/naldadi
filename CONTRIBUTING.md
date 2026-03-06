@@ -41,7 +41,7 @@ npm test -- --watch=false
 ## Coding Guidelines
 
 - Keep dice/domain logic in `src/app/core/` framework-agnostic and testable.
-- Put feature pages under `src/app/features/<feature>/pages/`.
+- Put feature pages under `src/app/features/<feature>/page/`.
 - Extract reusable UI to `src/app/shared/` or feature-local `components/` where appropriate.
 - Reuse the same throw model between throw and analysis modes.
 - Keep i18n strings in dictionaries (`en.ts`, `it.ts`) and avoid hard-coded UI text.

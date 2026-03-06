@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 
 import { I18nService } from '../../../../core/i18n.service';
+import { PaginationControls } from '../../../../shared/components/pagination-controls/pagination-controls';
 
 export interface SavedAnalysisRunView {
   readonly id: number;
@@ -11,7 +12,7 @@ export interface SavedAnalysisRunView {
 
 @Component({
   selector: 'app-saved-analysis-runs',
-  imports: [CommonModule],
+  imports: [CommonModule, PaginationControls],
   templateUrl: './saved-analysis-runs.html',
   styleUrl: './saved-analysis-runs.scss',
 })

@@ -14,7 +14,7 @@ No unrelated game systems should be introduced unless explicitly requested.
 ## Architecture Guidelines
 
 - Keep domain logic framework-agnostic inside `src/app/core/`.
-- Keep UI route pages under `src/app/features/<feature>/pages/`.
+- Keep UI route pages under `src/app/features/<feature>/page/`.
 - Extract reusable UI pieces (throw composer, results table, charts wrapper) to `src/app/shared/`.
 - Keep random/simulation logic in pure functions and injectable services for testability.
 

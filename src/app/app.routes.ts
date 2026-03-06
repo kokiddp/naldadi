@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { DiceAnalysisPage } from './features/dice-analysis/pages/dice-analysis-page/dice-analysis-page';
-import { DiceThrowPage } from './features/dice-throw/pages/dice-throw-page/dice-throw-page';
+import { DiceAnalysisPage } from './features/dice-analysis/page/page';
+import { DiceThrowPage } from './features/dice-throw/page/page';
 
 export const routes: Routes = [
 	{

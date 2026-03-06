@@ -1,60 +1,73 @@
-<section class="chart-wrap" *ngIf="points.length > 0; else noData">
-  <h3>{{ title }}</h3>
+@if (points.length > 0) {
+  <section class="chart-wrap">
+    <h3>{{ title }}</h3>
 
-  <div class="histogram-wrap" *ngIf="mode === 'histogram'">
-    <div class="marker mean-marker" *ngIf="meanMarker !== null" [style.left.%]="markerLeft(meanMarker)">
-      <span>{{ t('chart.marker.mean', { value: meanMarker.toFixed(2) }) }}</span>
-    </div>
-    <div class="marker median-marker" *ngIf="medianMarker !== null" [style.left.%]="markerLeft(medianMarker)">
-      <span>{{ t('chart.marker.median', { value: medianMarker.toFixed(2) }) }}</span>
-    </div>
+    @if (mode === 'histogram') {
+      <div class="histogram-wrap">
+        @if (meanMarker !== null) {
+          <div class="marker mean-marker" [style.left.%]="markerLeft(meanMarker)">
+            <span>{{ t('chart.marker.mean', { value: meanMarker.toFixed(2) }) }}</span>
+          </div>
+        }
+        @if (medianMarker !== null) {
+          <div class="marker median-marker" [style.left.%]="markerLeft(medianMarker)">
+            <span>{{ t('chart.marker.median', { value: medianMarker.toFixed(2) }) }}</span>
+          </div>
+        }
 
-    <div
-      class="floating-tooltip"
-      *ngIf="tooltipVisible"
-      [class.below-cursor]="tooltipBelowCursor"
-      [style.left.px]="tooltipLeft"
-      [style.top.px]="tooltipTop"
-    >
-      {{ tooltipText }}
-    </div>
-
-    <div class="bars">
-      <div class="bar-item" *ngFor="let point of histogramPoints; let index = index; trackBy: trackByHistogramKey">
-        <span class="bar-label" [class.hidden]="!shouldRenderLabel(index)">{{ point.shortLabel }}</span>
-        <div
-          class="bar-track"
-          (mousemove)="onBarHover($event, point)"
-          (mouseenter)="onBarHover($event, point)"
-          (mouseleave)="onBarLeave()"
-          (focusin)="onBarFocus(point)"
-          (focusout)="onBarLeave()"
-        >
+        @if (tooltipVisible) {
           <div
-            class="bar-fill"
-            tabindex="0"
-            [style.height.%]="(point.frequency / maxFrequency) * 100"
-            [attr.aria-label]="getHistogramTooltip(point)"
-          ></div>
+            class="floating-tooltip"
+            [class.below-cursor]="tooltipBelowCursor"
+            [style.left.px]="tooltipLeft"
+            [style.top.px]="tooltipTop"
+          >
+            {{ tooltipText }}
+          </div>
+        }
+
+        <div class="bars">
+          @for (point of histogramPoints; track trackByHistogramKey($index, point); let index = $index) {
+            <div class="bar-item">
+              <span class="bar-label" [class.hidden]="!shouldRenderLabel(index)">{{ point.shortLabel }}</span>
+              <div
+                class="bar-track"
+                (mousemove)="onBarHover($event, point)"
+                (mouseenter)="onBarHover($event, point)"
+                (mouseleave)="onBarLeave()"
+                (focusin)="onBarFocus(point)"
+                (focusout)="onBarLeave()"
+              >
+                <div
+                  class="bar-fill"
+                  tabindex="0"
+                  [style.height.%]="(point.frequency / maxFrequency) * 100"
+                  [attr.aria-label]="getHistogramTooltip(point)"
+                ></div>
+              </div>
+            </div>
+          }
         </div>
+
+        @if (isBinnedHistogram) {
+          <p class="chart-note">
+            {{ t('chart.note.binned') }}
+          </p>
+        }
       </div>
-    </div>
+    }
 
-    <p class="chart-note" *ngIf="isBinnedHistogram">
-      {{ t('chart.note.binned') }}
-    </p>
-  </div>
-
-  <div class="line-chart" *ngIf="mode !== 'histogram'">
-    <svg [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight" preserveAspectRatio="none">
-      <path [attr.class]="lineClass" [attr.d]="linePath"></path>
-    </svg>
-  </div>
-</section>
-
-<ng-template #noData>
+    @if (mode !== 'histogram') {
+      <div class="line-chart">
+        <svg [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight" preserveAspectRatio="none">
+          <path [attr.class]="lineClass" [attr.d]="linePath"></path>
+        </svg>
+      </div>
+    }
+  </section>
+} @else {
   <section class="chart-wrap">
     <h3>{{ title }}</h3>
     <p class="empty">{{ t('chart.noData') }}</p>
   </section>
-</ng-template>
+}
